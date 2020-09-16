@@ -274,6 +274,7 @@ local function AddBuff(frame, type, icon, stack, debufftype, duration, expiratio
 		stackSize = stackSize,
 		id = id,
 	}
+
 end
 
 local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, duration, expiration, caster, spellID, id)
@@ -629,6 +630,19 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 	end
 
 	ScanUnitBuffs(nameplateID, frame)
+--CHRIS ADDED INTERRUPTS
+--------------------------------------------------------------------------------------
+	if not PlatesBuffs[frame] then
+		if Interrupted[UnitGUID(nameplateID)] then
+			if not PlatesBuffs[frame] then PlatesBuffs[frame] = {} end
+			PlatesBuffs[frame][1] = Interrupted[UnitGUID(nameplateID)]
+		end
+	else
+		if Interrupted[UnitGUID(nameplateID)]  then
+		PlatesBuffs[frame][#PlatesBuffs[frame] + 1] = Interrupted[UnitGUID(nameplateID)]
+	  end
+	end
+-----------------------------------------------------------------------------------------
 	if not PlatesBuffs[frame] then
 		if frame.fPBiconsFrame then
 			frame.fPBiconsFrame:Hide()
@@ -660,8 +674,7 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 	end
 
 
-
-	for i = 1, #PlatesBuffs[frame] do
+	 	for i = 1, #PlatesBuffs[frame] do
 		if not frame.fPBiconsFrame.iconsFrame[i] then
 			CreateBuffIcon(frame,i)
 		end
@@ -714,7 +727,7 @@ local UpdateAllNameplates = fPB.UpdateAllNameplates
 local function Nameplate_Added(...)
 	local nameplateID = ...
 	local frame = C_NamePlate_GetNamePlateForUnit(nameplateID)
-	if frame.UnitFrame and frame.UnitFrame.BuffFrame then
+		if frame.UnitFrame and frame.UnitFrame.BuffFrame then
 		if db.notHideOnPersonalResource and UnitIsUnit(nameplateID,"player") then
 			frame.UnitFrame.BuffFrame:SetAlpha(1)
 		else
@@ -965,10 +978,12 @@ fPB.Events:SetScript("OnEvent", function(self, event, ...)
 		fPB.Events:RegisterEvent("NAME_PLATE_UNIT_ADDED")
 		fPB.Events:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
 
+
 		if db.showOnlyInCombat then
 			fPB.RegisterCombat()
 		else
 			fPB.Events:RegisterEvent("UNIT_AURA")
+			fPB.Events:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 		end
 	elseif event == "PLAYER_REGEN_DISABLED" then
 		fPB.Events:RegisterEvent("UNIT_AURA")
@@ -984,5 +999,89 @@ fPB.Events:SetScript("OnEvent", function(self, event, ...)
 		if strmatch((...),"nameplate%d+") then
 			UpdateUnitAuras(...)
 		end
+	elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
+
+			fPB:COMBAT_LOG_EVENT_UNFILTERED()
 	end
 end)
+
+
+local interruptsIds = {
+	[1766]   = 5,		-- Kick (Rogue)
+	[2139]   = 6,		-- Counterspell (Mage)
+	[6552]   = 4,		-- Pummel (Warrior)
+	[13491]  = 5,		-- Pummel (Iron Knuckles Item)
+	[19647]  = 6,		-- Spell Lock (felhunter) (Warlock)
+	[29443]  = 10,		-- Counterspell (Clutch of Foresight)
+	[47528]  = 3,		-- Mind Freeze (Death Knight)
+	[57994]  = 3,		-- Wind Shear (Shaman)
+	[91802]  = 2,		-- Shambling Rush (Death Knight)
+	[96231]  = 4,		-- Rebuke (Paladin)
+	[93985]  = 4,		-- Skull Bash (Druid Feral)
+	[97547]  = 5,		-- Solar Beam (Druid Balance)
+	[115781] = 6,		-- Optical Blast (Warlock)
+	[116705] = 4,		-- Spear Hand Strike (Monk)
+	[132409] = 6,		-- Spell Lock (command demon) (Warlock)
+	[147362] = 3,		-- Countershot (Hunter)
+	[183752] = 3,		-- Consume Magic (Demon Hunter)
+	[187707] = 3,		-- Muzzle (Hunter)
+	[212619] = 6,		-- Call Felhunter (Warlock)
+	[217824] = 4,		-- Shield of Virtue (Protec Paladin)
+	[231665] = 3,		-- Avengers Shield (Paladin)
+}
+
+Interrupted = {}
+
+function fPB:COMBAT_LOG_EVENT_UNFILTERED()
+		local _, event, _, sourceGUID, sourceName, sourceFlags, _, destGUID, _, _, _, spellId, _, _, _, _, spellSchool = CombatLogGetCurrentEventInfo()
+		if (destGUID ~= nil) then
+			if (event == "SPELL_INTERRUPT") then --change to interrupt
+				local duration = interruptsIds[spellId]
+				if (duration ~= nil) then
+					local type = "HARMFUL"
+					local _, _, icon = GetSpellInfo(spellId)
+					local stack = 0
+					local debufftype = "none"-- Magic 	= {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
+					local expiration = GetTime() + duration
+					local scale = 1.7
+					local durationSize = 0
+					local stackSize = 0
+					local id = 1 --Need to figure this out
+					if not Interrupted[destGUID] then
+						Interrupted[destGUID] = {}
+					end
+					Interrupted[destGUID] = {
+						type = type,
+						icon = icon,
+						stack = stack,
+						debufftype = debufftype,
+						duration = duration,
+						expiration = expiration,
+						scale = scale,
+						durationSize = durationSize,
+						stackSize = stackSize,
+						id = id,
+					}
+					UpdateAllNameplates()
+					C_Timer.After(interruptsIds[spellId], function()
+						if Interrupted[destGUID] then
+							Interrupted[destGUID] = nil
+							UpdateAllNameplates()
+						end
+					 end)
+				end
+			end
+		end
+		if (((event == "UNIT_DIED") or (event == "UNIT_DESTROYED") or (event == "UNIT_DISSIPATES")) and (select(2, GetPlayerInfoByGUID(destGUID)) ~= "HUNTER")) then
+				if (Interrupted[destGUID] ~= nil) then
+					Interrupted[destGUID]= nil
+					UpdateAllNameplates()
+			end
+		end
+		if ((sourceGUID ~= nil) and (event == "SPELL_CAST_SUCCESS") and (spellId == 235219)) then
+			if (Interrupted[SourceGUID] ~= nil) then
+				Interrupted[SourceGUID]= nil
+				UpdateAllNameplates()
+			end
+		end
+	end

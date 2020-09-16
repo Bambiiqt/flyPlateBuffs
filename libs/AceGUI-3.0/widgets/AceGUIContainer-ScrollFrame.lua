@@ -8,7 +8,7 @@ if not AceGUI or (AceGUI:GetWidgetVersion(Type) or 0) >= Version then return end
 
 -- Lua APIs
 local pairs, assert, type = pairs, assert, type
-local min, max, floor, abs = math.min, math.max, math.floor, math.abs
+local min, max, floor = math.min, math.max, math.floor
 
 -- WoW APIs
 local CreateFrame, UIParent = CreateFrame, UIParent
@@ -40,7 +40,7 @@ end
 Methods
 -------------------------------------------------------------------------------]]
 local methods = {
-	["OnAcquire"] = function(self) 
+	["OnAcquire"] = function(self)
 		self:SetScroll(0)
 		self.scrollframe:SetScript("OnUpdate", FixScrollOnUpdate)
 	end,
@@ -77,7 +77,7 @@ local methods = {
 	["MoveScroll"] = function(self, value)
 		local status = self.status or self.localstatus
 		local height, viewheight = self.scrollframe:GetHeight(), self.content:GetHeight()
-		
+
 		if self.scrollBarShown then
 			local diff = height - viewheight
 			local delta = 1
@@ -94,7 +94,6 @@ local methods = {
 		local status = self.status or self.localstatus
 		local height, viewheight = self.scrollframe:GetHeight(), self.content:GetHeight()
 		local offset = status.offset or 0
-		local curvalue = self.scrollbar:GetValue()
 		-- Give us a margin of error of 2 pixels to stop some conditions that i would blame on floating point inaccuracys
 		-- No-one is going to miss 2 pixels at the bottom of the frame, anyhow!
 		if viewheight < height + 2 then
