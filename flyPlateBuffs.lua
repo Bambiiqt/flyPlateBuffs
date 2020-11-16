@@ -621,8 +621,6 @@ end
 local function UpdateUnitAuras(nameplateID,updateOptions)
 	local number = string.match(nameplateID, "%d+")
 	local TPAnchor = _G["ThreatPlatesFrameNamePlate"..number]
-	print(number)
-	print(TPAnchor)
 
 	local frame = TPAnchor or C_NamePlate_GetNamePlateForUnit(nameplateID)
 	if not frame then return end 	-- modifying friendly nameplates is restricted in instances since 7.2
