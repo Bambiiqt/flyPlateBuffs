@@ -622,7 +622,9 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 	--local number = string.match(nameplateID, "%d+")
 	--local TPAnchor = _G["ThreatPlatesFrameNamePlate"..number]
 
-	local frame = 	_G["ThreatPlatesFrame"..(C_NamePlate_GetNamePlateForUnit(nameplateID):GetName())] or C_NamePlate_GetNamePlateForUnit(nameplateID)
+	local frame = C_NamePlate_GetNamePlateForUnit(nameplateID)
+	if frame.TPFrame then frame = frame.TPFrame end
+
 	if not frame then return end 	-- modifying friendly nameplates is restricted in instances since 7.2
 	if FilterUnits(nameplateID) then
 		if frame.fPBiconsFrame then
