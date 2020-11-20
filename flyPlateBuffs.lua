@@ -29,6 +29,7 @@ local linkColor = fPB.linkColor
 
 local cachedSpells = {}
 local PlatesBuffs = {}
+local tblinsert = table.insert
 
 local DefaultSettings = {
 	profile = {
@@ -638,12 +639,16 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 --------------------------------------------------------------------------------------
 	if not PlatesBuffs[frame] then
 		if Interrupted[UnitGUID(nameplateID)] then
-			if not PlatesBuffs[frame] then PlatesBuffs[frame] = {} end
-			PlatesBuffs[frame][1] = Interrupted[UnitGUID(nameplateID)]
+			for i = 1, #Interrupted[UnitGUID(nameplateID)] do
+				if not PlatesBuffs[frame] then PlatesBuffs[frame] = {} end
+				PlatesBuffs[frame][i] = Interrupted[UnitGUID(nameplateID)][i]
+			end
 		end
 	else
 		if Interrupted[UnitGUID(nameplateID)]  then
-		PlatesBuffs[frame][#PlatesBuffs[frame] + 1] = Interrupted[UnitGUID(nameplateID)]
+			for i = 1, #Interrupted[UnitGUID(nameplateID)] do
+				PlatesBuffs[frame][#PlatesBuffs[frame] + 1] = Interrupted[UnitGUID(nameplateID)][i]
+			end
 	  end
 	end
 -----------------------------------------------------------------------------------------
@@ -1005,8 +1010,7 @@ fPB.Events:SetScript("OnEvent", function(self, event, ...)
 			UpdateUnitAuras(...)
 		end
 	elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
-
-			fPB:COMBAT_LOG_EVENT_UNFILTERED()
+		fPB:CLEU()
 	end
 end)
 
@@ -1033,20 +1037,93 @@ local interruptsIds = {
 	[212619] = 6,		-- Call Felhunter (Warlock)
 	[217824] = 4,		-- Shield of Virtue (Protec Paladin)
 	[231665] = 3,		-- Avengers Shield (Paladin)
+
+}
+
+local castedAuraIds = {
+	[198103]= 60, --Shaman Earth Ele
+	--[205636]= 10, --Druid Trees
+	[288853]= 25, --Dk Raise Abomination
+	[123904]= 24,--WW Xuen Pet Summmon
+	[34433]= 15, --Disc Pet Summmon Sfiend
+	[123040]= 15,  --Disc Pet Summmon Bender
+	[1122]= 30, --Warlock Infernals
 }
 
 Interrupted = {}
 
-function fPB:COMBAT_LOG_EVENT_UNFILTERED()
+function fPB:CLEU()
 		local _, event, _, sourceGUID, sourceName, sourceFlags, _, destGUID, _, _, _, spellId, _, _, _, _, spellSchool = CombatLogGetCurrentEventInfo()
+		--print(C_CovenantSanctumUI.GetSanctumType("player"))
+
+		if (event == "SPELL_CAST_SUCCESS") then
+			if castedAuraIds[spellId] then
+				local duration = castedAuraIds[spellId]
+				local type = "HARMFUL"
+				local _, _, icon = GetSpellInfo(spellId)
+				local stack = 0
+				local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
+				local expiration = GetTime() + duration
+				local scale = 1.3
+				local durationSize = 0
+				local stackSize = 0
+				local id = 1 --Need to figure this out
+				if not Interrupted[sourceGUID] then
+					Interrupted[sourceGUID] = {}
+				end
+				local tablespot = #Interrupted[sourceGUID] + 1
+				tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id})
+				UpdateAllNameplates()
+				C_Timer.After(castedAuraIds[spellId], function()
+					if Interrupted[sourceGUID] then
+						Interrupted[sourceGUID][tablespot] = nil
+						UpdateAllNameplates()
+					end
+				end)
+			 end
+		 end
+
+		 if (destGUID ~= nil) then
+			if (event == "SPELL_CAST_SUCCESS") then
+				if interruptsIds[spellId] then
+					for i = 1, #C_NamePlate_GetNamePlates() do
+						 if (destGUID == UnitGUID("nameplate"..i)) and (select(7, UnitChannelInfo("nameplate"..i)) == false) then
+							local duration = interruptsIds[spellId]
+						  local type = "HARMFUL"
+		 					local _, _, icon = GetSpellInfo(spellId)
+		 					local stack = 0
+		 					local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
+		 					local expiration = GetTime() + duration
+		 					local scale = 1.6
+		 					local durationSize = 0
+		 					local stackSize = 0
+		 					local id = 1 --Need to figure this out
+		 					if not Interrupted[destGUID] then
+		 						Interrupted[destGUID] = {}
+		 					end
+							local tablespot = #Interrupted[destGUID] + 1
+							tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id})
+							UpdateAllNameplates()
+							C_Timer.After(interruptsIds[spellId], function()
+								if Interrupted[destGUID] then
+									Interrupted[destGUID][tablespot] = nil
+									UpdateAllNameplates()
+								end
+						  end)
+						 end
+					 end
+				 end
+			 end
+		 end
+
 		if (destGUID ~= nil) then
-			if (event == "SPELL_INTERRUPT") then --change to interrupt
+			if (event == "SPELL_INTERRUPT") then
 				local duration = interruptsIds[spellId]
 				if (duration ~= nil) then
 					local type = "HARMFUL"
 					local _, _, icon = GetSpellInfo(spellId)
 					local stack = 0
-					local debufftype = "none"-- Magic 	= {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
+					local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
 					local expiration = GetTime() + duration
 					local scale = 1.6
 					local durationSize = 0
@@ -1055,28 +1132,19 @@ function fPB:COMBAT_LOG_EVENT_UNFILTERED()
 					if not Interrupted[destGUID] then
 						Interrupted[destGUID] = {}
 					end
-					Interrupted[destGUID] = {
-						type = type,
-						icon = icon,
-						stack = stack,
-						debufftype = debufftype,
-						duration = duration,
-						expiration = expiration,
-						scale = scale,
-						durationSize = durationSize,
-						stackSize = stackSize,
-						id = id,
-					}
+					local tablespot = #Interrupted[destGUID] + 1
+					tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id})
 					UpdateAllNameplates()
 					C_Timer.After(interruptsIds[spellId], function()
 						if Interrupted[destGUID] then
-							Interrupted[destGUID] = nil
+							Interrupted[destGUID][tablespot] = nil
 							UpdateAllNameplates()
 						end
-					 end)
+				 	end)
 				end
 			end
 		end
+
 		if (((event == "UNIT_DIED") or (event == "UNIT_DESTROYED") or (event == "UNIT_DISSIPATES")) and (select(2, GetPlayerInfoByGUID(destGUID)) ~= "HUNTER")) then
 				if (Interrupted[destGUID] ~= nil) then
 					Interrupted[destGUID]= nil
@@ -1089,4 +1157,5 @@ function fPB:COMBAT_LOG_EVENT_UNFILTERED()
 				UpdateAllNameplates()
 			end
 		end
+
 	end
