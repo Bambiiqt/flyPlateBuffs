@@ -1044,14 +1044,14 @@ local interruptsIds = {
 
 local castedAuraIds = {
 	--[198103]= 60, --Shaman Earth Ele "Greater Earth Elemental", has sourceGUID [spellbookid]
-	[188616]= 60, --Shaman Earth Ele "Greater Earth Elemental", has sourceGUID [summonid]
+	[188616] = 60, --Shaman Earth Ele "Greater Earth Elemental", has sourceGUID [summonid]
 	--[205636]= 10, --Druid Trees "Treant", has sourceGUID (spellId and Summons are different) [spellbookid]
-	[248280]= 10, --Druid Trees "Treant", has sourceGUID (spellId and Summons are different) [summonid]
-	[288853]= 25, --Dk Raise Abomination "Abomination" same Id has sourceGUID
-	[123904]= 24,--WW Xuen Pet Summmon "Xuen" same Id has sourceGUID
-	[34433]= 15, --Disc Pet Summmon Sfiend "Shadowfiend" same Id has sourceGUID
-	[123040]= 15,  --Disc Pet Summmon Bender "Mindbender" same Id has sourceGUID
-	[1122]= 30, --Warlock Infernals
+	[248280] = 10, --Druid Trees "Treant", has sourceGUID (spellId and Summons are different) [summonid]
+	[288853] = 25, --Dk Raise Abomination "Abomination" same Id has sourceGUID
+	[123904] = 24,--WW Xuen Pet Summmon "Xuen" same Id has sourceGUID
+	[34433] = 15, --Disc Pet Summmon Sfiend "Shadowfiend" same Id has sourceGUID
+	[123040] = 15,  --Disc Pet Summmon Bender "Mindbender" same Id has sourceGUID
+	[1122] = 30, --Warlock Infernals
 }
 
 
@@ -1077,15 +1077,12 @@ function fPB:CLEU()
 				C_Timer.NewTicker(0.5, function()
 					local pet = destGUID
 					local owner = sourceName
-					local type, zero, server_id, instance_id, zone_uid, npc_id, spawn_uid = strsplit("-",destGUID);
-					local ownerCheck = GetGuardianOwner(pet)
-					print(expiration-GetTime())
-					if ownerCheck then
-							--print(ownerCheck.." "..expiration-GetTime())
+					if GetGuardianOwner(pet) == owner then
+							print(GetGuardianOwner(pet).." "..expiration-GetTime())
 					else
-							--print(pet.." Died or Dismissed "..expiration-GetTime())
+							print(pet.." Died or Dismissed "..expiration-GetTime())
 					end
-				end, duration)
+				end, duration * 2)
 			end
 		end
 
