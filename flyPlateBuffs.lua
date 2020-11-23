@@ -1053,6 +1053,7 @@ local castedAuraIds = {
 	[34433] = 15, --Disc Pet Summmon Sfiend "Shadowfiend" same Id has sourceGUID
 	[123040] = 15,  --Disc Pet Summmon Bender "Mindbender" same Id has sourceGUID
 	[111685] = 30, --Warlock Infernals,  has sourceGUID (spellId and Summons are different) [spellbookid]
+	[8143] = 10, --Tremor Totem
 }
 
 
