@@ -30,6 +30,8 @@ local linkColor = fPB.linkColor
 local cachedSpells = {}
 local PlatesBuffs = {}
 local tblinsert = table.insert
+local bit_band = bit.band
+local Interrupted = {}
 
 local DefaultSettings = {
 	profile = {
@@ -1041,20 +1043,51 @@ local interruptsIds = {
 }
 
 local castedAuraIds = {
-	[198103]= 60, --Shaman Earth Ele
-	--[205636]= 10, --Druid Trees
-	[288853]= 25, --Dk Raise Abomination
-	[123904]= 24,--WW Xuen Pet Summmon
-	[34433]= 15, --Disc Pet Summmon Sfiend
-	[123040]= 15,  --Disc Pet Summmon Bender
+	--[198103]= 60, --Shaman Earth Ele "Greater Earth Elemental", has sourceGUID [spellbookid]
+	[188616]= 60, --Shaman Earth Ele "Greater Earth Elemental", has sourceGUID [summonid]
+	--[205636]= 10, --Druid Trees "Treant", has sourceGUID (spellId and Summons are different) [spellbookid]
+	[248280]= 10, --Druid Trees "Treant", has sourceGUID (spellId and Summons are different) [summonid]
+	[288853]= 25, --Dk Raise Abomination "Abomination" same Id has sourceGUID
+	[123904]= 24,--WW Xuen Pet Summmon "Xuen" same Id has sourceGUID
+	[34433]= 15, --Disc Pet Summmon Sfiend "Shadowfiend" same Id has sourceGUID
+	[123040]= 15,  --Disc Pet Summmon Bender "Mindbender" same Id has sourceGUID
 	[1122]= 30, --Warlock Infernals
 }
 
-Interrupted = {}
+
+
+local tip = CreateFrame('GameTooltip', 'GuardianOwnerTooltip', nil, 'GameTooltipTemplate')
+local function GetGuardianOwner(guid)
+    tip:SetOwner(WorldFrame, 'ANCHOR_NONE')
+    tip:SetHyperlink('unit:' .. guid or '')
+    local text = GuardianOwnerTooltipTextLeft2
+    return strmatch(text and text:GetText() or '', "^([^%s']+)'")
+end
+
 
 function fPB:CLEU()
-		local _, event, _, sourceGUID, sourceName, sourceFlags, _, destGUID, _, _, _, spellId, _, _, _, _, spellSchool = CombatLogGetCurrentEventInfo()
+		local _, event, _, sourceGUID, sourceName, sourceFlags, _, destGUID, destName, destFlags, _, spellId, _, _, _, _, spellSchool = CombatLogGetCurrentEventInfo()
 		--print(C_CovenantSanctumUI.GetSanctumType("player"))
+
+		if (event == "SPELL_SUMMON") or (event == "SPELL_CREATE") then
+			if castedAuraIds[spellId] then
+				local duration = castedAuraIds[spellId]
+				local expiration = GetTime() + duration
+
+				C_Timer.NewTicker(0.5, function()
+					local pet = destGUID
+					local owner = sourceName
+					local type, zero, server_id, instance_id, zone_uid, npc_id, spawn_uid = strsplit("-",destGUID);
+					local ownerCheck = GetGuardianOwner(pet)
+					print(expiration-GetTime())
+					if ownerCheck then
+							--print(ownerCheck.." "..expiration-GetTime())
+					else
+							--print(pet.." Died or Dismissed "..expiration-GetTime())
+					end
+				end, duration)
+			end
+		end
 
 		if (event == "SPELL_CAST_SUCCESS") then
 			if castedAuraIds[spellId] then
