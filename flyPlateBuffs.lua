@@ -1122,7 +1122,7 @@ function fPB:CLEU()
 		 end
 
 		 if (destGUID ~= nil) then
-			if (event == "SPELL_CAST_SUCCESS") then
+			if (event == "SPELL_CAST_SUCCESS") and not (event == "SPELL_INTERRUPT") then
 				if interruptsIds[spellId] then
 					for i = 1, #C_NamePlate_GetNamePlates() do
 						 if (destGUID == UnitGUID("nameplate"..i)) and (select(7, UnitChannelInfo("nameplate"..i)) == false) then
@@ -1140,19 +1140,31 @@ function fPB:CLEU()
 		 						Interrupted[destGUID] = {}
 		 					end
 							local tablespot = #Interrupted[destGUID] + 1
-							tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id})
-							UpdateAllNameplates()
-							C_Timer.After(interruptsIds[spellId], function()
-								if Interrupted[destGUID] then
-									Interrupted[destGUID][tablespot] = nil
-									UpdateAllNameplates()
+							local Kicks = 0
+							for k, v in pairs(Interrupted[destGUID]) do
+								if v.duration == duration and v.icon == icon then
+									print("Reg Kick Spell Exists")
+									Kicks = 1
+									break
 								end
-						  end)
-						 end
-					 end
-				 end
-			 end
-		 end
+							end
+							if Kicks == 0 then
+								print("CHANNELLED KICK SPELL LOOP")
+								tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id})
+								UpdateAllNameplates()
+								C_Timer.After(interruptsIds[spellId], function()
+									if Interrupted[destGUID] then
+										Interrupted[destGUID][tablespot] = nil
+										UpdateAllNameplates()
+									end
+							  end)
+							 end
+							break
+				 		end
+					end
+				end
+			end
+		end
 
 		if (destGUID ~= nil) then
 			if (event == "SPELL_INTERRUPT") then
@@ -1171,14 +1183,25 @@ function fPB:CLEU()
 						Interrupted[destGUID] = {}
 					end
 					local tablespot = #Interrupted[destGUID] + 1
-					tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id})
-					UpdateAllNameplates()
-					C_Timer.After(interruptsIds[spellId], function()
-						if Interrupted[destGUID] then
-							Interrupted[destGUID][tablespot] = nil
-							UpdateAllNameplates()
+					local Kicks = 0
+					for k, v in pairs(Interrupted[destGUID]) do
+						if v.duration == duration and v.icon == icon then
+							print("Channeled Spell Exists")
+							Kicks = 1
+							break
 						end
-				 	end)
+					end
+					if Kicks == 0 then
+						print("REGULAR KICK SPELL LOOP")
+						tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id})
+						UpdateAllNameplates()
+						C_Timer.After(interruptsIds[spellId], function()
+							if Interrupted[destGUID] then
+								Interrupted[destGUID][tablespot] = nil
+								UpdateAllNameplates()
+							end
+					 	end)
+					end
 				end
 			end
 		end
