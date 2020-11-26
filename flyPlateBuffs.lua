@@ -1078,9 +1078,8 @@ end
 
 function fPB:CLEU()
 		local _, event, _, sourceGUID, sourceName, sourceFlags, _, destGUID, destName, destFlags, _, spellId, _, _, _, _, spellSchool = CombatLogGetCurrentEventInfo()
-		--print(C_CovenantSanctumUI.GetSanctumType("player"))
-
-		if (event == "SPELL_SUMMON") or (event == "SPELL_CREATE") then
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		if (event == "SPELL_SUMMON") or (event == "SPELL_CREATE") then --Summoned CDs
 			if castedAuraIds[spellId] then
 				local duration = castedAuraIds[spellId]
 				local type = "HARMFUL"
@@ -1096,7 +1095,7 @@ function fPB:CLEU()
 					Interrupted[sourceGUID] = {}
 				end
 				local tablespot = #Interrupted[sourceGUID] + 1
-				tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id})
+				tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID})
 				UpdateAllNameplates()
 				C_Timer.After(castedAuraIds[spellId], function()
 					if Interrupted[sourceGUID] then
@@ -1120,56 +1119,87 @@ function fPB:CLEU()
 				end, duration * 2)
 			 end
 		 end
-
-		 if (destGUID ~= nil) then
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		 if (destGUID ~= nil) then --Channeled Kicks
 			if (event == "SPELL_CAST_SUCCESS") and not (event == "SPELL_INTERRUPT") then
 				if interruptsIds[spellId] then
-					for i = 1, #C_NamePlate_GetNamePlates() do
-						 if (destGUID == UnitGUID("nameplate"..i)) and (select(7, UnitChannelInfo("nameplate"..i)) == false) then
-							local duration = interruptsIds[spellId]
-						  local type = "HARMFUL"
-		 					local _, _, icon = GetSpellInfo(spellId)
-		 					local stack = 0
-		 					local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
-		 					local expiration = GetTime() + duration
-		 					local scale = 1.6
-		 					local durationSize = 0
-		 					local stackSize = 0
-		 					local id = 1 --Need to figure this out
-		 					if not Interrupted[destGUID] then
-		 						Interrupted[destGUID] = {}
-		 					end
-							local tablespot = #Interrupted[destGUID] + 1
-							local Kicks = 0
-							for k, v in pairs(Interrupted[destGUID]) do
-								if v.duration == duration and v.icon == icon then
-									print("Reg Kick Spell Exists")
-									Kicks = 1
-									break
-								end
+					local unit
+						for i = 1,  #C_NamePlate_GetNamePlates() do --Issue arrises if nameplates are not shown, you will not be able to capture the kick for channel
+							if (destGUID == UnitGUID("nameplate"..i)) then
+								unit = "nameplate"..i
+								break
 							end
-							if Kicks == 0 then
-								print("CHANNELLED KICK SPELL LOOP")
-								tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id})
-								UpdateAllNameplates()
-								C_Timer.After(interruptsIds[spellId], function()
-									if Interrupted[destGUID] then
-										Interrupted[destGUID][tablespot] = nil
-										UpdateAllNameplates()
-									end
-							  end)
-							 end
-							break
-				 		end
+						end
+						for i = 1, 3 do
+							if (destGUID == UnitGUID("arena"..i)) then
+								unit = "arena"..i
+								break
+							end
+						end
+						if unit then
+						 print(unit.." C_Covenants is: "..C_Covenants.GetActiveCovenantID(unit))
+					  end
+
+					 if unit and (select(7, UnitChannelInfo(unit)) == false) then
+						local duration = interruptsIds[spellId]
+					  local type = "HARMFUL"
+	 					local _, _, icon = GetSpellInfo(spellId)
+	 					local stack = 0
+	 					local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
+	 					local expiration = GetTime() + duration
+	 					local scale = 1.6
+	 					local durationSize = 0
+	 					local stackSize = 0
+	 					local id = 1 --Need to figure this out
+	 					if not Interrupted[destGUID] then
+	 						Interrupted[destGUID] = {}
+	 					end
+						local tablespot = #Interrupted[destGUID] + 1
+						local sourceGUID_Kick = true
+						for k, v in pairs(Interrupted[destGUID]) do
+							if v.icon == icon and v.sourceGUID == sourceGUID and ((expiration - v.expiration) < 1) then
+								print("Regular Kick Spell Exists, kick used within: "..(expiration - v.expiration))
+								sourceGUID_Kick = nil -- the source already used his kick within a GCD on this destGUID
+								break
+							end
+						end
+						if sourceGUID_Kick then
+							print("CHANNELLED KICK SPELL LOOP")
+							tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID})
+							UpdateAllNameplates()
+							C_Timer.After(interruptsIds[spellId], function()
+								if Interrupted[destGUID] then
+									Interrupted[destGUID][tablespot] = nil
+									UpdateAllNameplates()
+								end
+						  end)
+					  end
 					end
 				end
 			end
 		end
-
-		if (destGUID ~= nil) then
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		if (destGUID ~= nil) then --Regular Casted Kicks
 			if (event == "SPELL_INTERRUPT") then
-				local duration = interruptsIds[spellId]
-				if (duration ~= nil) then
+				if interruptsIds[spellId] then
+					local unit
+					for i = 1,  #C_NamePlate_GetNamePlates() do --Issue arrises if nameplates are not shown, you will not be able to capture the kick for channel
+						if (destGUID == UnitGUID("nameplate"..i)) then
+							unit = "nameplate"..i
+							break
+						end
+					end
+					for i = 1, 3 do
+						if (destGUID == UnitGUID("arena"..i)) then
+							unit = "arena"..i
+							break
+						end
+					end
+					if unit then
+					 print(unit.." C_Covenants is: "..C_Covenants.GetActiveCovenantID(unit))
+					end
+
+					local duration = interruptsIds[spellId]
 					local type = "HARMFUL"
 					local _, _, icon = GetSpellInfo(spellId)
 					local stack = 0
@@ -1183,17 +1213,17 @@ function fPB:CLEU()
 						Interrupted[destGUID] = {}
 					end
 					local tablespot = #Interrupted[destGUID] + 1
-					local Kicks = 0
+					local sourceGUID_Kick = true
 					for k, v in pairs(Interrupted[destGUID]) do
-						if v.duration == duration and v.icon == icon then
-							print("Channeled Spell Exists")
-							Kicks = 1
+						if v.icon == icon and v.sourceGUID == sourceGUID and ((expiration - v.expiration) < 1) then
+							print("Channeled Kick Spell Exists, kick used within: "..(expiration - v.expiration))
+							sourceGUID_Kick = nil -- the source already used his kick within a GCD on this destGUID
 							break
 						end
 					end
-					if Kicks == 0 then
+					if sourceGUID_Kick then
 						print("REGULAR KICK SPELL LOOP")
-						tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id})
+						tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID})
 						UpdateAllNameplates()
 						C_Timer.After(interruptsIds[spellId], function()
 							if Interrupted[destGUID] then
@@ -1205,18 +1235,19 @@ function fPB:CLEU()
 				end
 			end
 		end
-
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		if ((sourceGUID ~= nil) and (event == "SPELL_CAST_SUCCESS") and (spellId == 235219)) then --coldsnap reset
+			if (Interrupted[SourceGUID] ~= nil) then
+				Interrupted[SourceGUID]= nil
+				UpdateAllNameplates()
+			end
+		end
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		if (((event == "UNIT_DIED") or (event == "UNIT_DESTROYED") or (event == "UNIT_DISSIPATES")) and (select(2, GetPlayerInfoByGUID(destGUID)) ~= "HUNTER")) then
 				if (Interrupted[destGUID] ~= nil) then
 					Interrupted[destGUID]= nil
 					UpdateAllNameplates()
 			end
 		end
-		if ((sourceGUID ~= nil) and (event == "SPELL_CAST_SUCCESS") and (spellId == 235219)) then
-			if (Interrupted[SourceGUID] ~= nil) then
-				Interrupted[SourceGUID]= nil
-				UpdateAllNameplates()
-			end
-		end
-
-	end
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+end
