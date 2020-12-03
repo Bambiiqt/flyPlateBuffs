@@ -1044,8 +1044,10 @@ local interruptsIds = {
 }
 
 local castedAuraIds = {
-	--[198103]= 60, --Shaman Earth Ele "Greater Earth Elemental", has sourceGUID [spellbookid]
 	[188616] = 60, --Shaman Earth Ele "Greater Earth Elemental", has sourceGUID [summonid]
+	[118323] = 60, --Shaman Primal Earth Ele "Primal Earth Elemental", has sourceGUID [summonid]
+	[188592] = 60, --Shaman Fire Ele "Fire Earth Elemental", has sourceGUID [summonid]
+	[118291] = 60, --Shaman Primal Fire Ele "Primal Fire Earth Elemental", has sourceGUID [summonid]
 	--[205636]= 10, --Druid Trees "Treant", has sourceGUID (spellId and Summons are different) [spellbookid]
 	--[248280] = 10, --Druid Trees "Treant", has sourceGUID (spellId and Summons are different) [summonid]
 	[288853] = 25, --Dk Raise Abomination "Abomination" same Id has sourceGUID
@@ -1057,7 +1059,6 @@ local castedAuraIds = {
 }
 
 
-
 local tip = CreateFrame('GameTooltip', 'GuardianOwnerTooltip', nil, 'GameTooltipTemplate')
 local function GetGuardianOwner(guid)
   tip:SetOwner(WorldFrame, 'ANCHOR_NONE')
@@ -1066,12 +1067,12 @@ local function GetGuardianOwner(guid)
 	local text1 = GuardianOwnerTooltipTextLeft3
 	if text1 and type(text1:GetText()) == "string" then
 		if strmatch(text1:GetText(), "Corpse") then
-			return "Corpse"
+			return "Corpse" --Only need for Earth Ele and Infernals
 		else
-			return strmatch(text and text:GetText() or '', "^([^%s']+)'")
+			return strmatch(text and text:GetText() or '', "^([^%s-]+)")
 		end
 	else
-		return strmatch(text and text:GetText() or '', "^([^%s']+)'")
+		return strmatch(text and text:GetText() or '', "^([^%s-]+)")
 	end
 end
 
@@ -1104,12 +1105,11 @@ function fPB:CLEU()
 					end
 				end)
 				self.ticker = C_Timer.NewTicker(0.5, function()
-					local pet = destGUID
-					local owner = sourceName
-					if GetGuardianOwner(pet) == owner then
-							--print(GetGuardianOwner(pet).." fPB"..expiration-GetTime())
+					local name = GetSpellInfo(spellId)
+					if GetGuardianOwner(destGUID) and GetGuardianOwner(destGUID) ~= "Corpse" and GetGuardianOwner(destGUID) ~= "Level" then
+							print(GetGuardianOwner(destGUID).." "..name.." Pet fPB: "..expiration-GetTime())
 					else
-							--print(pet.." Died or Dismissed fPB"..expiration-GetTime())
+							print(GetGuardianOwner(destGUID).." "..name.." Pet Died or Dismissed fPB "..expiration-GetTime())
 						if Interrupted[sourceGUID] then
 							Interrupted[sourceGUID][tablespot] = nil
 							UpdateAllNameplates()
@@ -1137,7 +1137,7 @@ function fPB:CLEU()
 							end
 						end
 						if unit then
-						 print(unit.." C_Covenants is: "..C_Covenants.GetActiveCovenantID(unit))
+						 --print(unit.." C_Covenants is: "..C_Covenants.GetActiveCovenantID(unit))
 					  end
 
 					 if unit and (select(7, UnitChannelInfo(unit)) == false) then
@@ -1164,7 +1164,7 @@ function fPB:CLEU()
 							end
 						end
 						if sourceGUID_Kick then
-							print("CHANNELLED KICK SPELL LOOP")
+							print(sourceGUID.." Kicked CHANNEL "..spellId.. " from "..destGUID)
 							tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID})
 							UpdateAllNameplates()
 							C_Timer.After(interruptsIds[spellId], function()
@@ -1196,7 +1196,7 @@ function fPB:CLEU()
 						end
 					end
 					if unit then
-					 print(unit.." C_Covenants is: "..C_Covenants.GetActiveCovenantID(unit))
+					 --print(unit.." C_Covenants is: "..C_Covenants.GetActiveCovenantID(unit))
 					end
 
 					local duration = interruptsIds[spellId]
@@ -1222,7 +1222,7 @@ function fPB:CLEU()
 						end
 					end
 					if sourceGUID_Kick then
-						print("REGULAR KICK SPELL LOOP")
+						print(sourceGUID.." Kicked CAST "..spellId.. " from "..destGUID)
 						tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID})
 						UpdateAllNameplates()
 						C_Timer.After(interruptsIds[spellId], function()
