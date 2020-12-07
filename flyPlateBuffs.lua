@@ -1106,19 +1106,23 @@ function fPB:CLEU()
 				end)
 				self.ticker = C_Timer.NewTicker(0.5, function()
 					local name = GetSpellInfo(spellId)
-					if GetGuardianOwner(destGUID) and GetGuardianOwner(destGUID) ~= "Corpse" and GetGuardianOwner(destGUID) ~= "Level" then
-							print(GetGuardianOwner(destGUID).." "..name.." Pet fPB: "..expiration-GetTime())
-					else
-							print(GetGuardianOwner(destGUID).." "..name.." Pet Died or Dismissed fPB "..expiration-GetTime())
-						if Interrupted[sourceGUID] then
-							Interrupted[sourceGUID][tablespot] = nil
-							UpdateAllNameplates()
-						  self.ticker:Cancel()
+					if GetGuardianOwner(destGUID) then
+						if not strmatch(GetGuardianOwner(destGUID), 'Corpse') and not strmatch(GetGuardianOwner(destGUID), 'Level') then
+							--print(GetGuardianOwner(destGUID).." "..name.." Up fPB: "..expiration-GetTime())
+						else
+							--print(GetGuardianOwner(destGUID).." "..name.." Down fPB "..expiration-GetTime())
+							if Interrupted[sourceGUID] then
+								print(GetGuardianOwner(destGUID).." "..name.." Cancelled fPB "..expiration-GetTime())
+								Interrupted[sourceGUID][tablespot] = nil
+								UpdateAllNameplates()
+							  self.ticker:Cancel()
+							end
 						end
 					end
 				end, duration * 2)
-			 end
-		 end
+			end
+		end
+
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		 if (destGUID ~= nil) then --Channeled Kicks
 			if (event == "SPELL_CAST_SUCCESS") and not (event == "SPELL_INTERRUPT") then
