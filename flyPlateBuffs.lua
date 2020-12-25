@@ -300,6 +300,31 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		end
 	end
 
+	-----------------------------------------------------------------------------------------------------------------
+	--Icon Changes
+	-----------------------------------------------------------------------------------------------------------------
+	if spellID == 45524 then --Chains of Ice Dk
+		--icon = 463560
+		--icon = 236922
+		icon = 236925
+	end
+
+	if spellID == 317589 then --Mirros of Toremnt, Tormenting Backlash (Venthyr Mage) to Frost Jaw
+		icon = 538562
+	end
+
+	if spellID == 334693 then --Abosolute Zero Frost Dk Legendary Stun
+		icon = 517161
+	end
+
+	if spellID == 115196 then --Shiv
+		icon = 135428
+	end
+
+	if spellID == 199845 then --Psyflay
+		icon = 537021
+	end
+
 	-- showDebuffs  1 = all, 2 = mine + spellList, 3 = only spellList, 4 = only mine, 5 = none
 	-- listedSpell.show  -- 1 = always, 2 = mine, 3 = never, 4 = on ally, 5 = on enemy
 	if not listedSpell then
