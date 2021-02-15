@@ -325,6 +325,14 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		icon = 537021
 	end
 
+	if spellID == 317929 then --Aura Mastery Cast Immune Pally
+		icon = 135863
+	end
+
+	if spellID == 199545 then --Steed of Glory Hack
+		icon = 135890
+	end
+
 	-- showDebuffs  1 = all, 2 = mine + spellList, 3 = only spellList, 4 = only mine, 5 = none
 	-- listedSpell.show  -- 1 = always, 2 = mine, 3 = never, 4 = on ally, 5 = on enemy
 	if not listedSpell then
@@ -1073,8 +1081,9 @@ local interruptsIds = {
 local castedAuraIds = {
 	[188616] = 60, --Shaman Earth Ele "Greater Earth Elemental", has sourceGUID [summonid]
 	[118323] = 60, --Shaman Primal Earth Ele "Primal Earth Elemental", has sourceGUID [summonid]
-	[188592] = 60, --Shaman Fire Ele "Fire Earth Elemental", has sourceGUID [summonid]
+	[188592] = 60, --Shaman Fire Ele "Fire Elemental", has sourceGUID [summonid]
 	[118291] = 60, --Shaman Primal Fire Ele "Primal Fire Earth Elemental", has sourceGUID [summonid]
+	[157299] = 30, --Storm Ele , has sourceGUID [summonid]
 	--[205636]= 10, --Druid Trees "Treant", has sourceGUID (spellId and Summons are different) [spellbookid]
 	--[248280] = 10, --Druid Trees "Treant", has sourceGUID (spellId and Summons are different) [summonid]
 	[288853] = 25, --Dk Raise Abomination "Abomination" same Id has sourceGUID
@@ -1083,6 +1092,7 @@ local castedAuraIds = {
 	[123040] = 12,  --Disc Pet Summmon Bender "Mindbender" same Id has sourceGUID
 	[111685] = 30, --Warlock Infernals,  has sourceGUID (spellId and Summons are different) [spellbookid]
 	[8143] = 10, --Tremor Totem
+	[321686] = 40, --Mirror Image
 }
 
 
@@ -1112,6 +1122,11 @@ function fPB:CLEU()
 				local duration = castedAuraIds[spellId]
 				local type = "HARMFUL"
 				local _, _, icon = GetSpellInfo(spellId)
+
+				if spellId == 321686 then
+					icon = 135994
+				end
+
 				local stack = 0
 				local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
 				local expiration = GetTime() + duration
