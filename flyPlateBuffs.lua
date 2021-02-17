@@ -30,6 +30,8 @@ local linkColor = fPB.linkColor
 local cachedSpells = {}
 local PlatesBuffs = {}
 local tblinsert = table.insert
+local tremove = table.remove
+local substring = string.sub
 local type = type
 local bit_band = bit.band
 local Interrupted = {}
@@ -1121,11 +1123,13 @@ function fPB:CLEU()
 			if castedAuraIds[spellId] then
 				local duration = castedAuraIds[spellId]
 				local type = "HARMFUL"
-				local _, _, icon = GetSpellInfo(spellId)
+				local namePrint, _, icon = GetSpellInfo(spellId)
 
 				if spellId == 321686 then
 					icon = 135994
 				end
+
+				print(sourceName.." Summoned "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
 
 				local stack = 0
 				local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
@@ -1138,7 +1142,7 @@ function fPB:CLEU()
 					Interrupted[sourceGUID] = {}
 				end
 				local tablespot = #Interrupted[sourceGUID] + 1
-				tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID})
+				tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID,  ["destGUID"] = destGUID})
 				UpdateAllNameplates()
 				C_Timer.After(castedAuraIds[spellId], function()
 					if Interrupted[sourceGUID] then
@@ -1152,12 +1156,22 @@ function fPB:CLEU()
 						if not strmatch(GetGuardianOwner(destGUID), 'Corpse') and not strmatch(GetGuardianOwner(destGUID), 'Level') then
 							--print(GetGuardianOwner(destGUID).." "..name.." Up fPB: "..expiration-GetTime())
 						else
-							--print(GetGuardianOwner(destGUID).." "..name.." Down fPB "..expiration-GetTime())
 							if Interrupted[sourceGUID] then
-								print(GetGuardianOwner(destGUID).." "..name.." Cancelled fPB "..expiration-GetTime())
-								Interrupted[sourceGUID][tablespot] = nil
-								UpdateAllNameplates()
-							  self.ticker:Cancel()
+								--print(GetGuardianOwner(destGUID).." "..name.." Cancelled fPB "..expiration-GetTime())
+								for k, v in pairs(Interrupted[sourceGUID]) do
+									if Interrupted[sourceGUID][k] then
+	                  if substring(v.destGUID, -5) == substring(destGUID, -5) then --string.sub is to help witj Mirror Images bug
+	                    if strmatch(GetGuardianOwner(v.destGUID), 'Corpse') or strmatch(GetGuardianOwner(v.destGUID), 'Level') then
+	                  		Interrupted[sourceGUID][k] = nil
+												tremove(Interrupted[sourceGUID], k)
+	                      print(sourceName.." "..GetGuardianOwner(destGUID).." "..namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", expiration-GetTime()).." fPB")
+	                      UpdateAllNameplates()
+	                      self.ticker:Cancel()
+												break
+	                    end
+	                  end
+									end
+                end
 							end
 						end
 					end
