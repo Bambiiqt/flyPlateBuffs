@@ -1087,7 +1087,7 @@ local castedAuraIds = {
 	[118291] = 60, --Shaman Primal Fire Ele "Primal Fire Earth Elemental", has sourceGUID [summonid]
 	[157299] = 30, --Storm Ele , has sourceGUID [summonid]
 	--[205636]= 10, --Druid Trees "Treant", has sourceGUID (spellId and Summons are different) [spellbookid]
-	--[248280] = 10, --Druid Trees "Treant", has sourceGUID (spellId and Summons are different) [summonid]
+	[248280] = 10, --Druid Trees "Treant", has sourceGUID (spellId and Summons are different) [summonid]
 	[288853] = 25, --Dk Raise Abomination "Abomination" same Id has sourceGUID
 	[123904] = 24,--WW Xuen Pet Summmon "Xuen" same Id has sourceGUID
 	[34433] = 15, --Disc Pet Summmon Sfiend "Shadowfiend" same Id has sourceGUID
@@ -1128,6 +1128,9 @@ function fPB:CLEU()
 				if spellId == 321686 then
 					icon = 135994
 				end
+				if spellId == 157299 then
+					icon = 2065626
+				end
 
 				print(sourceName.." Summoned "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
 
@@ -1152,25 +1155,17 @@ function fPB:CLEU()
 				end)
 				self.ticker = C_Timer.NewTicker(0.5, function()
 					local name = GetSpellInfo(spellId)
-					if GetGuardianOwner(destGUID) then
-						if not strmatch(GetGuardianOwner(destGUID), 'Corpse') and not strmatch(GetGuardianOwner(destGUID), 'Level') then
-							--print(GetGuardianOwner(destGUID).." "..name.." Up fPB: "..expiration-GetTime())
-						else
-							if Interrupted[sourceGUID] then
-								--print(GetGuardianOwner(destGUID).." "..name.." Cancelled fPB "..expiration-GetTime())
-								for k, v in pairs(Interrupted[sourceGUID]) do
-									if Interrupted[sourceGUID][k] then
-	                  if substring(v.destGUID, -5) == substring(destGUID, -5) then --string.sub is to help witj Mirror Images bug
-	                    if strmatch(GetGuardianOwner(v.destGUID), 'Corpse') or strmatch(GetGuardianOwner(v.destGUID), 'Level') then
-	                  		Interrupted[sourceGUID][k] = nil
-												tremove(Interrupted[sourceGUID], k)
-	                      print(sourceName.." "..GetGuardianOwner(destGUID).." "..namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", expiration-GetTime()).." fPB")
-	                      UpdateAllNameplates()
-	                      self.ticker:Cancel()
-												break
-	                    end
-	                  end
-									end
+					if Interrupted[sourceGUID] then
+						for k, v in pairs(Interrupted[sourceGUID]) do
+							if v.destGUID then
+                if substring(v.destGUID, -5) == substring(destGUID, -5) then --string.sub is to help witj Mirror Images bug
+                  if strmatch(GetGuardianOwner(v.destGUID), 'Corpse') or strmatch(GetGuardianOwner(v.destGUID), 'Level') then
+                		Interrupted[sourceGUID][k] = nil
+	                  print(sourceName.." "..GetGuardianOwner(v.destGUID).." "..namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", expiration-GetTime()).." fPB")
+                    UpdateAllNameplates()
+                    self.ticker:Cancel()
+										break
+                  end
                 end
 							end
 						end
