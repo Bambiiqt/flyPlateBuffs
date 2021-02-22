@@ -1093,6 +1093,7 @@ local castedAuraIds = {
 	[34433] = 15, --Disc Pet Summmon Sfiend "Shadowfiend" same Id has sourceGUID
 	[123040] = 12,  --Disc Pet Summmon Bender "Mindbender" same Id has sourceGUID
 	[111685] = 30, --Warlock Infernals,  has sourceGUID (spellId and Summons are different) [spellbookid]
+	[205180] = 20, --Warlock Darkglare
 	[8143] = 10, --Tremor Totem
 	[321686] = 40, --Mirror Image
 }
@@ -1124,7 +1125,6 @@ function fPB:CLEU()
 				local duration = castedAuraIds[spellId]
 				local type = "HARMFUL"
 				local namePrint, _, icon = GetSpellInfo(spellId)
-
 				if spellId == 321686 then
 					icon = 135994
 				end
@@ -1219,7 +1219,7 @@ function fPB:CLEU()
 							end
 						end
 						if sourceGUID_Kick then
-							print(sourceGUID.." Kicked CHANNEL "..spellId.. " from "..destGUID)
+							print(sourceName.." Kicked CHANNEL "..spellId.. " from "..destName)
 							tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID})
 							UpdateAllNameplates()
 							C_Timer.After(interruptsIds[spellId], function()
@@ -1277,7 +1277,7 @@ function fPB:CLEU()
 						end
 					end
 					if sourceGUID_Kick then
-						print(sourceGUID.." Kicked CAST "..spellId.. " from "..destGUID)
+						print(sourceName.." Kicked CAST "..spellId.. " from "..destName)
 						tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID})
 						UpdateAllNameplates()
 						C_Timer.After(interruptsIds[spellId], function()
