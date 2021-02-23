@@ -1219,7 +1219,7 @@ function fPB:CLEU()
 							end
 						end
 						if sourceGUID_Kick then
-							print(sourceName.." Kicked CHANNEL "..spellId.. " from "..destName)
+							print(sourceName.." Kicked CHANNEL w/"..spellId.. " from "..destName)
 							tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID})
 							UpdateAllNameplates()
 							C_Timer.After(interruptsIds[spellId], function()
@@ -1277,7 +1277,7 @@ function fPB:CLEU()
 						end
 					end
 					if sourceGUID_Kick then
-						print(sourceName.." Kicked CAST "..spellId.. " from "..destName)
+						print(sourceName.." Kicked CAST w/"..spellId.. " from "..destName)
 						tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID})
 						UpdateAllNameplates()
 						C_Timer.After(interruptsIds[spellId], function()
