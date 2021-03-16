@@ -1161,7 +1161,7 @@ function fPB:CLEU()
                 if substring(v.destGUID, -5) == substring(destGUID, -5) then --string.sub is to help witj Mirror Images bug
                   if strmatch(GetGuardianOwner(v.destGUID), 'Corpse') or strmatch(GetGuardianOwner(v.destGUID), 'Level') then
                 		Interrupted[sourceGUID][k] = nil
-	                  print(sourceName.." "..GetGuardianOwner(v.destGUID).." "..namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", expiration-GetTime()).." fPB")
+	                  --print(sourceName.." "..GetGuardianOwner(v.destGUID).." "..namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", expiration-GetTime()).." fPB")
                     UpdateAllNameplates()
                     self.ticker:Cancel()
 										break
