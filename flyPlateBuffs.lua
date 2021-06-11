@@ -506,10 +506,10 @@ local function UpdateBuffIcon(self)
 	if self.stack > 1 then
 		self.stacktext:SetText(tostring(self.stack))
 		if db.stackPosition == 2 or db.stackPosition == 3 then
-			self.stacktext:SetFont(fPB.stackFont, (self.stackSize or db.stackSize), "NORMAL")
-			self.stackBg:SetWidth(self.stacktext:GetStringWidth())
-			self.stackBg:SetHeight(self.stacktext:GetStringHeight())
-			self.stackBg:Show()
+			self.stacktext:SetFont(fPB.stackFont, (self.stackSize or db.stackSize), "OUTLINE")
+			--self.stackBg:SetWidth(self.stacktext:GetStringWidth())
+			--self.stackBg:SetHeight(self.stacktext:GetStringHeight())
+			--self.stackBg:Show()
 		else
 			self.stacktext:SetFont(fPB.stackFont, (self.stackSize or db.stackSize), "OUTLINE")
 		end
@@ -576,7 +576,7 @@ local function UpdateBuffIconOptions(self)
 		self.stackBg:SetPoint("CENTER", self.stacktext)
 	else
 		-- above icon
-		self.stacktext:SetFont(fPB.stackFont, (self.stackSize or db.stackSize), "NORMAL")
+		self.stacktext:SetFont(fPB.stackFont, (self.stackSize or db.stackSize), "OUTLINE") --Change to OUTLINE
 		self.stacktext:SetPoint("BOTTOM", self, "TOP", 7, -7)  --CHRIS
 		self.stackBg:SetPoint("CENTER", self.stacktext)
 	end
