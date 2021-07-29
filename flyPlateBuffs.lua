@@ -331,6 +331,14 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		icon = 135863
 	end
 
+	if spellID == 329543 then --Divine Ascension
+		icon = 2103871
+	end
+
+	if spellID == 328530 then --Divine Ascension
+		icon = 2103871
+	end
+
 	if spellID == 199545 then --Steed of Glory Hack
 		icon = 135890
 	end
@@ -1125,6 +1133,7 @@ function fPB:CLEU()
 				local duration = castedAuraIds[spellId]
 				local type = "HARMFUL"
 				local namePrint, _, icon = GetSpellInfo(spellId)
+
 				if spellId == 321686 then
 					icon = 135994
 				end
