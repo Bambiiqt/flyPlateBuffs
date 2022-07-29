@@ -35,6 +35,8 @@ local substring = string.sub
 local type = type
 local bit_band = bit.band
 local Interrupted = {}
+local Earthen = { }
+local Grounding = { }
 
 local DefaultSettings = {
 	profile = {
@@ -341,6 +343,42 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 
 	if spellID == 199545 then --Steed of Glory Hack
 		icon = 135890
+	end
+
+	if spellID == 201633 then -- Earthen Totem (Totems Need a Spawn Time Check)
+		if caster then
+			local guid = UnitGUID(caster)
+			local spawnTime
+			local unitType, _, _, _, _, _, spawnUID = strsplit("-", guid)
+			if unitType == "Creature" or unitType == "Vehicle" then
+			local spawnEpoch = GetServerTime() - (GetServerTime() % 2^23)
+			local spawnEpochOffset = bit.band(tonumber(string.sub(spawnUID, 5), 16), 0x7fffff)
+			spawnTime = spawnEpoch + spawnEpochOffset
+			--print("Earthen Buff Check at: "..spawnTime)
+			end
+	    if Earthen[spawnTime] then
+			duration = Earthen[spawnTime].duration
+			expiration = Earthen[spawnTime].expiration
+			end
+		end
+	end
+
+	if spellID == 8178 then -- Grounding (Totems Need a Spawn Time Check)
+		if caster then
+			local guid = UnitGUID(caster)
+			local spawnTime
+			local unitType, _, _, _, _, _, spawnUID = strsplit("-", guid)
+			if unitType == "Creature" or unitType == "Vehicle" then
+			local spawnEpoch = GetServerTime() - (GetServerTime() % 2^23)
+			local spawnEpochOffset = bit.band(tonumber(string.sub(spawnUID, 5), 16), 0x7fffff)
+			spawnTime = spawnEpoch + spawnEpochOffset
+			--print("Grounding Buff Check at: "..spawnTime)
+			end
+			if Grounding[spawnTime] then
+			duration = Grounding[spawnTime].duration
+			expiration = Grounding[spawnTime].expiration
+			end
+		end
 	end
 
 	-- showDebuffs  1 = all, 2 = mine + spellList, 3 = only spellList, 4 = only mine, 5 = none
@@ -1102,25 +1140,27 @@ local castedAuraIds = {
 	[123040] = 12,  --Disc Pet Summmon Bender "Mindbender" same Id has sourceGUID
 	[111685] = 30, --Warlock Infernals,  has sourceGUID (spellId and Summons are different) [spellbookid]
 	[205180] = 20, --Warlock Darkglare
-	[8143] = 10, --Tremor Totem
+	[265187] = 15, --Demonic Tyrant
+	[8143] = 10, --Tremor Totem ***ONLY WORKS FOR THE CASTER
 	[321686] = 40, --Mirror Image
+	[353601] = 15, --Fel Obelisk
 }
 
 
 local tip = CreateFrame('GameTooltip', 'GuardianOwnerTooltip', nil, 'GameTooltipTemplate')
-local function GetGuardianOwner(guid)
+local function GetGuardianOwner(guid) --Used for Infrnals and Ele
   tip:SetOwner(WorldFrame, 'ANCHOR_NONE')
   tip:SetHyperlink('unit:' .. guid or '')
   local text = GuardianOwnerTooltipTextLeft2
 	local text1 = GuardianOwnerTooltipTextLeft3
-	if text1 and type(text1:GetText()) == "string" then
+	if text1 and type(text1:GetText()) == "string" then ---sometimes is nil when still up not sure why???
 		if strmatch(text1:GetText(), "Corpse") then
-			return "Corpse" --Only need for Earth Ele and Infernals
+			return "Corpse"
 		else
-			return strmatch(text and text:GetText() or '', "^([^%s-]+)")
+			return "Alive" --strmatch(text and text:GetText() or '', "^([^%s-]+)") --Still Alive
 		end
 	else
-		return strmatch(text and text:GetText() or '', "^([^%s-]+)")
+		return "Dissipated" --no text1, no corpse its disspated
 	end
 end
 
@@ -1128,13 +1168,79 @@ end
 function fPB:CLEU()
 		local _, event, _, sourceGUID, sourceName, sourceFlags, _, destGUID, destName, destFlags, _, spellId, _, _, _, _, spellSchool = CombatLogGetCurrentEventInfo()
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------------------------
+	--Earthen Check (Totems Need a Spawn Time Check)
+	-----------------------------------------------------------------------------------------------------------------
+	if ((event == "SPELL_SUMMON") or (event == "SPELL_CREATE")) and (spellId == 198838) then
+		if (destGUID ~= nil) then
+		local duration = 15
+		local guid = destGUID
+		local spawnTime
+		local unitType, _, _, _, _, _, spawnUID = strsplit("-", guid)
+		if unitType == "Creature" or unitType == "Vehicle" then
+    local spawnEpoch = GetServerTime() - (GetServerTime() % 2^23)
+    local spawnEpochOffset = bit.band(tonumber(string.sub(spawnUID, 5), 16), 0x7fffff)
+   	spawnTime = spawnEpoch + spawnEpochOffset
+    --print("Earthen Totem Spawned at: "..spawnTime)
+		end
+		local expiration = GetTime() + duration
+			if (Earthen[spawnTime] == nil) then --source becomes the totem ><
+				Earthen[spawnTime] = {}
+			end
+			Earthen[spawnTime] = { ["duration"] = duration, ["expiration"] = expiration }
+			C_Timer.After(duration + 1, function()	-- execute in some close next frame to accurate use of UnitAura function
+			Earthen[spawnTime] = nil
+			end)
+			C_Timer.After(.2, function()	-- execute a second timer to ensure it catches
+			UpdateAllNameplates()
+			end)
+		end
+		UpdateAllNameplates()
+		end
+
+		-----------------------------------------------------------------------------------------------------------------
+		--Grounding Check (Totems Need a Spawn Time Check)
+		-----------------------------------------------------------------------------------------------------------------
+		if ((event == "SPELL_SUMMON") or (event == "SPELL_CREATE")) and (spellId == 204336) then
+			if (destGUID ~= nil) then
+			local duration = 3
+					local guid = destGUID
+					local spawnTime
+					local unitType, _, _, _, _, _, spawnUID = strsplit("-", guid)
+					if unitType == "Creature" or unitType == "Vehicle" then
+			    local spawnEpoch = GetServerTime() - (GetServerTime() % 2^23)
+			    local spawnEpochOffset = bit.band(tonumber(string.sub(spawnUID, 5), 16), 0x7fffff)
+			    spawnTime = spawnEpoch + spawnEpochOffset
+			    --print("Grounding Totem Spawned at: "..spawnTime)
+					end
+				local expiration = GetTime() + duration
+				if (Grounding[spawnTime] == nil) then --source becomes the totem ><
+					Grounding[spawnTime] = {}
+				end
+				Grounding[spawnTime] = { ["duration"] = duration, ["expiration"] = expiration }
+				C_Timer.After(duration + 1, function()	-- execute in some close next frame to accurate use of UnitAura function
+				Grounding[spawnTime] = nil
+				end)
+				C_Timer.After(.2, function()	-- execute a second timer to ensure it catches
+				UpdateAllNameplates()
+				end)
+			end
+			UpdateAllNameplates()
+			end
+
+			-----------------------------------------------------------------------------------------------------------------
+			--Summoned Spells Check
+			-----------------------------------------------------------------------------------------------------------------
+
 		if (event == "SPELL_SUMMON") or (event == "SPELL_CREATE") then --Summoned CDs
+			--local namePrint, _, icon = GetSpellInfo(spellId)
+			--print(sourceName.." Summoned "..spellId.." "..namePrint.." "..substring(destGUID, -7).." fPB")
 			if castedAuraIds[spellId] then
 				local duration = castedAuraIds[spellId]
 				local type = "HARMFUL"
 				local namePrint, _, icon = GetSpellInfo(spellId)
 
-				if spellId == 321686 then
+				if spellId == 321686 then --Mirror Image Icon Change
 					icon = 135994
 				end
 				if spellId == 157299 then
@@ -1168,11 +1274,11 @@ function fPB:CLEU()
 						for k, v in pairs(Interrupted[sourceGUID]) do
 							if v.destGUID then
                 if substring(v.destGUID, -5) == substring(destGUID, -5) then --string.sub is to help witj Mirror Images bug
-                  if strmatch(GetGuardianOwner(v.destGUID), 'Corpse') or strmatch(GetGuardianOwner(v.destGUID), 'Level') then
+                  if strmatch(GetGuardianOwner(v.destGUID), 'Corpse') or strmatch(GetGuardianOwner(v.destGUID), 'Dissipated') then --
                 		Interrupted[sourceGUID][k] = nil
-	                  --print(sourceName.." "..GetGuardianOwner(v.destGUID).." "..namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", expiration-GetTime()).." fPB")
+	                  print(sourceName.." "..GetGuardianOwner(v.destGUID).." "..namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", expiration-GetTime()).." fPB")
                     UpdateAllNameplates()
-                    self.ticker:Cancel()
+                    --self.ticker:Cancel()
 										break
                   end
                 end
