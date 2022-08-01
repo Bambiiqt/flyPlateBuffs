@@ -299,6 +299,10 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 	local my = caster == "player"
 	local cachedID = cachedSpells[name]
 
+	if spellId == 325216 then --Steed of Glory Hack
+		if type == "HARMFUL" then return end
+	end
+
 	if Spells[spellId] and not db.ignoredDefaultSpells[spellId] then
 		listedSpell = Spells[spellId]
 	elseif cachedID then
