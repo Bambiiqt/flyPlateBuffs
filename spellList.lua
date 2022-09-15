@@ -1,5 +1,5 @@
 local _, fPB = ...
-
+----------------------------Shows fPB for Name and SpellId
 local defaultSpells1 = {--Important spells, add them with huge icons.
 
 	-- Mage

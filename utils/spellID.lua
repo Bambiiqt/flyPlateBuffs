@@ -1,5 +1,5 @@
 local _, fPB = ...
-function fPB.ShowSpellID()
+function fPB.showspellId()
 	local hooksecurefunc, select, UnitBuff, UnitDebuff, UnitAura =
 		  hooksecurefunc, select, UnitBuff, UnitDebuff, UnitAura
 

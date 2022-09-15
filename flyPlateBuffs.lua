@@ -120,7 +120,7 @@ local DefaultSettings = {
 		Spells = {},
 		ignoredDefaultSpells = {},
 
-		showSpellID = false,
+		showspellId = false,
 
 		nameplateMaxDistance,
 		nameplateInset,
@@ -299,9 +299,14 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 	local my = caster == "player"
 	local cachedID = cachedSpells[name]
 
-	if spellId == 325216 then --Steed of Glory Hack
-		if type == "HARMFUL" then return end
+	if spellId == 325216 then --Hide Bonedust Brew Debuff
+		if type == "HARMFUL" and not my then return end
 	end
+
+	if spellId == 319952 then --Hide Bonedust Brew Debuff
+		if type == "HARMFUL" and not my then return end
+	end
+
 
 	if Spells[spellId] and not db.ignoredDefaultSpells[spellId] then
 		listedSpell = Spells[spellId]
@@ -396,7 +401,6 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 	local EnemySmokeBomb
 	if spellId == 212183 then -- Smoke Bomb
 		if caster and SmokeBombAuras[UnitGUID(caster)] then
-			print(caster)
 			if UnitIsEnemy("player", caster) then --still returns true for an enemy currently under mindcontrol I can add your fix.
 				duration = SmokeBombAuras[UnitGUID(caster)].duration --Add a check, i rogue bombs in stealth there is a source but the cleu doesnt regester a time
 				expiration = SmokeBombAuras[UnitGUID(caster)].expiration
@@ -943,6 +947,8 @@ function fPB.AddNewSpell(spell)
 		end
 	end
 	local name = GetSpellInfo(spellId)
+	print("fPB Added Spell Name: "..name)
+	print("fPB Added SpellId: "..spellId)
 	if spellId and name then
 		if not db.Spells[spellId] then
 			db.Spells[spellId] = {
@@ -977,7 +983,7 @@ function fPB.RemoveSpell(spell)
 	fPB.BuildSpellList()
 	UpdateAllNameplates(true)
 end
-function fPB.ChangeSpellID(oldID, newID)
+function fPB.ChangespellId(oldID, newID)
 	if db.Spells[newID] then
 		DEFAULT_CHAT_FRAME:AddMessage(chatColor..L["Spell with this ID is already in the list. Its name is "]..linkColor.."|Hspell:"..newID.."|h["..GetSpellInfo(newID).."]|h|r")
 		return
@@ -1113,7 +1119,7 @@ fPB.Events:SetScript("OnEvent", function(self, event, ...)
 	elseif event == "PLAYER_LOGIN" then
 		fPB.OptionsOnEnable()
 		fPB.FixBlizzard()
-		if db.showSpellID then fPB.ShowSpellID() end
+		if db.showspellId then fPB.showspellId() end
 		MSQ = LibStub("Masque", true)
 		if MSQ then
 			Group = MSQ:Group(AddonName)
