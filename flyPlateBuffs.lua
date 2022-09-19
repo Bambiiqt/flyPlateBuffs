@@ -406,7 +406,6 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 				expiration = SmokeBombAuras[UnitGUID(caster)].expiration
 				EnemySmokeBomb = true
 			elseif not UnitIsEnemy("player", caster) then --Add a check, i rogue bombs in stealth there is a source but the cleu doesnt regester a time
-				print(caster)
 				duration = SmokeBombAuras[UnitGUID(caster)].duration --Add a check, i rogue bombs in stealth there is a source but the cleu doesnt regester a time
 				expiration = SmokeBombAuras[UnitGUID(caster)].expiration
 				EnemySmokeBomb = false
@@ -1465,7 +1464,7 @@ function fPB:CLEU()
 					 if unit and (select(7, UnitChannelInfo(unit)) == false) then
 						local duration = interruptsIds[spellId]
 					  local type = "HARMFUL"
-	 					local _, _, icon = GetSpellInfo(spellId)
+	 					local name, _, icon = GetSpellInfo(spellId)
 	 					local stack = 0
 	 					local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
 	 					local expiration = GetTime() + duration
@@ -1486,7 +1485,7 @@ function fPB:CLEU()
 							end
 						end
 						if sourceGUID_Kick then
-							print(sourceName.." Kicked CHANNEL w/"..spellId.. " from "..destName)
+							print(sourceName.." kicked "..(select(1, UnitChannelInfo(unit))).." channel cast w/ "..name.. " from "..destName)
 							tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID})
 							UpdateAllNameplates()
 							Ctimer(interruptsIds[spellId], function()
@@ -1523,7 +1522,7 @@ function fPB:CLEU()
 
 					local duration = interruptsIds[spellId]
 					local type = "HARMFUL"
-					local _, _, icon = GetSpellInfo(spellId)
+					local name, _, icon = GetSpellInfo(spellId)
 					local stack = 0
 					local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
 					local expiration = GetTime() + duration
@@ -1538,13 +1537,13 @@ function fPB:CLEU()
 					local sourceGUID_Kick = true
 					for k, v in pairs(Interrupted[destGUID]) do
 						if v.icon == icon and v.sourceGUID == sourceGUID and ((expiration - v.expiration) < 1) then
-							print("Channeled Kick Spell Exists, kick used within: "..(expiration - v.expiration))
+							print("Casted Kick Fired but Did Not Execute within: "..(expiration - v.expiration).." of Channel Kick Firing")
 							sourceGUID_Kick = nil -- the source already used his kick within a GCD on this destGUID
 							break
 						end
 					end
 					if sourceGUID_Kick then
-						print(sourceName.." Kicked CAST w/"..spellId.. " from "..destName)
+						print(sourceName.." kicked cast w/ "..name.. " from "..destName)
 						tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID})
 						UpdateAllNameplates()
 						Ctimer(interruptsIds[spellId], function()
