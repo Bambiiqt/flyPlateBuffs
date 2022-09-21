@@ -272,7 +272,7 @@ local function DrawOnPlate(frame)
 	end
 end
 
-local function AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, scale, durationSize, stackSize, EnemySmokeBomb)
+local function AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, scale, durationSize, stackSize, EnemySmokeBomb, spellId)
 	if not PlatesBuffs[frame] then PlatesBuffs[frame] = {} end
 	PlatesBuffs[frame][#PlatesBuffs[frame] + 1] = {
 		type = type,
@@ -286,6 +286,7 @@ local function AddBuff(frame, type, icon, stack, debufftype, duration, expiratio
 		stackSize = stackSize,
 		id = id,
 		EnemySmokeBomb = EnemySmokeBomb,
+		spellId = spellId,
 	}
 
 end
@@ -433,7 +434,7 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		end
 		if (type == "HARMFUL" and (db.showDebuffs == 1 or ((db.showDebuffs == 2 or db.showDebuffs == 4) and my)))
 		or (type == "HELPFUL"   and (db.showBuffs   == 1 or ((db.showBuffs   == 2 or db.showBuffs   == 4) and my))) then
-			AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id)
+			AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, _, _, _, _, spellId)
 			return
 		else
 			return
@@ -447,7 +448,7 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		or(listedSpell.show == 2 and my)
 		or(listedSpell.show == 4 and isAlly)
 		or(listedSpell.show == 5 and not isAlly) then
-			AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, listedSpell.scale, listedSpell.durationSize, listedSpell.stackSize, EnemySmokeBomb )
+			AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, listedSpell.scale, listedSpell.durationSize, listedSpell.stackSize, EnemySmokeBomb, spellId )
 			return
 		end
 	end
@@ -843,11 +844,22 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 		buffIcon.width = db.baseWidth * buff.scale
 		buffIcon.height = db.baseHeight * buff.scale
 		buffIcon.EnemySmokeBomb = buff.EnemySmokeBomb
+		buffIcon.spellId = buff.spellId
 
 		if updateOptions then
 			UpdateBuffIconOptions(buffIcon)
 		end
 		UpdateBuffIcon(buffIcon)
+
+		-----------------------------------------------------------------------------------------
+		--Glow
+		-----------------------------------------------------------------------------------------
+		if buffIcon.spellId and buffIcon.spellId == 199448 then --Ultimate Sac Glow
+			ActionButton_ShowOverlayGlow(buffIcon)
+		else
+			ActionButton_HideOverlayGlow(buffIcon)
+		end
+
 		buffIcon:Show()
 	end
 	frame.fPBiconsFrame:Show()
@@ -1179,8 +1191,10 @@ local interruptsIds = {
 	[183752] = 3,		-- Consume Magic (Demon Hunter)
 	[187707] = 3,		-- Muzzle (Hunter)
 	[212619] = 6,		-- Call Felhunter (Warlock)
+	[347008] = 4,		-- Axe Toss(felguard) (Warlock)
 	[217824] = 4,		-- Shield of Virtue (Protec Paladin)
 	[231665] = 3,		-- Avengers Shield (Paladin)
+	[91807] =  2,   --Shambling Rush
 
 }
 
@@ -1367,9 +1381,6 @@ function fPB:CLEU()
 				end
 			UpdateAllNameplates()
 			end
-
-
-
 
 			-----------------------------------------------------------------------------------------------------------------
 			--Summoned Spells Check
