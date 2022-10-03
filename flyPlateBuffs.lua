@@ -153,7 +153,7 @@ for i=1, #defaultSpells2 do
 		DefaultSettings.profile.Spells[spellId] = {
 			name = name,
 			spellId = spellId,
-			scale = 1.5,
+			scale = 1.55,
 			durationSize = 14,
 			show = 1,	-- 1 = always, 2 = mine, 3 = never, 4 = on ally, 5 = on enemy
 			stackSize = 14,
@@ -522,9 +522,6 @@ local function iconOnUpdate(self, elapsed)
 				end
 				self:SetAlpha(f * 3)
 			end
-			--if self:IsMouseOver() and db.showTooltip and tooltip:IsShown() then
-			--tooltip:SetUnitAura(self:GetParent():GetParent().namePlateUnitToken, self.id, self.type)
-		  --end
 		end
 	end
 end
@@ -682,16 +679,6 @@ local function UpdateBuffIconOptions(self)
 		self.stackBg:SetPoint("CENTER", self.stacktext)
 	end
 
-	if db.showTooltip then
-		self:SetScript("OnEnter", function(self)
-			tooltip:SetOwner(self, "ANCHOR_LEFT")
-			tooltip:SetUnitAura(self:GetParent():GetParent().namePlateUnitToken, self.id, self.type)
-		end)
-		self:SetScript("OnLeave", function() tooltip:Hide() end)
-	else
-		self:EnableMouse(false)
-	end
-
 end
 local function iconOnHide(self)
 	self.stacktext:Hide()
@@ -764,6 +751,7 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 
 	local frame = C_NamePlate_GetNamePlateForUnit(nameplateID)
 	if frame then
+		frame.TPFrame  = _G["ThreatPlatesFrame" .. frame:GetName()]
 		if frame.TPFrame then frame = frame.TPFrame end
 	end
 
@@ -808,9 +796,6 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 		-- otherwise use UIParent, but this causes mess of icon/border textures
 		frame.fPBiconsFrame = CreateFrame("Frame")
 		local parent = db.parentWorldFrame and WorldFrame
-		if not parent then
-			parent = frame.unitFrame -- for ElvUI
-		end
 		if not parent then
 			parent = frame.TPFrame -- for ThreatPlates
 		end
@@ -1217,6 +1202,8 @@ local castedAuraIds = {
 	[321686] = 40, --Mirror Image
 	[353601] = 15, --Fel Obelisk
 
+	--Casted Spells
+	[202770] = 8, --Fury of Elune
 }
 
 
@@ -1451,6 +1438,42 @@ function fPB:CLEU()
 			end
 		end
 
+		if (event == "SPELL_CAST_SUCCESS") and (spellId == 202770) then --Casted  CDs w/o Aura
+			--local namePrint, _, icon = GetSpellInfo(spellId)
+			--print(sourceName.." Summoned "..spellId.." "..namePrint.." "..substring(destGUID, -7).." fPB")
+			if castedAuraIds[spellId] then
+				local guid = destGUID
+				local duration = castedAuraIds[spellId]
+				local type = "HARMFUL"
+				local namePrint, _, icon = GetSpellInfo(spellId)
+				--print(sourceName.." Summoned "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
+				local stack = 0
+				local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
+				local expiration = GetTime() + duration
+				local scale = 1.3
+				local durationSize = 0
+				local stackSize = 0
+				local id = 1 --Need to figure this out
+				if not Interrupted[sourceGUID] then
+					Interrupted[sourceGUID] = {}
+				end
+				local tablespot = #Interrupted[sourceGUID] + 1
+				tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID,  ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
+				UpdateAllNameplates()
+				Ctimer(duration, function()
+					if Interrupted[sourceGUID] then
+						for k, v in pairs(Interrupted[sourceGUID]) do
+							if v.spellId == spellId then
+								print(v.sourceName.." Timed Out "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Timer")
+								Interrupted[sourceGUID][k] = nil
+								UpdateAllNameplates()
+							end
+						end
+					end
+				end)
+			end
+		end
+
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		 if (destGUID ~= nil) then --Channeled Kicks
 			if (event == "SPELL_CAST_SUCCESS") and not (event == "SPELL_INTERRUPT") then
@@ -1479,7 +1502,7 @@ function fPB:CLEU()
 	 					local stack = 0
 	 					local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
 	 					local expiration = GetTime() + duration
-	 					local scale = 1.5
+	 					local scale = 1.55
 	 					local durationSize = 0
 	 					local stackSize = 0
 	 					local id = 1 --Need to figure this out
@@ -1537,7 +1560,7 @@ function fPB:CLEU()
 					local stack = 0
 					local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
 					local expiration = GetTime() + duration
-					local scale = 1.5
+					local scale = 1.55
 					local durationSize = 0
 					local stackSize = 0
 					local id = 1 --Need to figure this out

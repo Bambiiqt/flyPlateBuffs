@@ -535,7 +535,7 @@ fPB.MainOptionTable = {
 					desc = L["Horizontal offset of buff frame"],
 					min = -256,
 					max = 256,
-					step = 1,
+					step = .1,
 				},
 				yOffset = {
 					order = 5,
@@ -544,7 +544,7 @@ fPB.MainOptionTable = {
 					desc = L["Vertical offset of buff frame"],
 					min = -256,
 					max = 256,
-					step = 1,
+					step = .1,
 				},
 				blank2 = {
 					order = 6,
@@ -583,7 +583,7 @@ fPB.MainOptionTable = {
 					desc = L["Horizontal spacing between icons"],
 					min = minInterval,
 					max = maxInterval,
-					step = 1,
+					step = .1,
 				},
 				yInterval = {
 					order = 11,
@@ -592,7 +592,7 @@ fPB.MainOptionTable = {
 					desc = L["Vertical spacing between icons"],
 					min = minInterval,
 					max = maxInterval,
-					step = 1,
+					step = .1,
 				},
 				break1 = {
 					order = 12,
