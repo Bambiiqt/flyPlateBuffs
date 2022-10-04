@@ -1181,6 +1181,8 @@ local interruptsIds = {
 	[231665] = 3,		-- Avengers Shield (Paladin)
 	[91807] =  2,   --Shambling Rush
 
+	[11972] =  3,   --Shield Bash (testing Purposes in Northern barrens)
+
 }
 
 local castedAuraIds = {
@@ -1438,7 +1440,10 @@ function fPB:CLEU()
 			end
 		end
 
-		if (event == "SPELL_CAST_SUCCESS") and (spellId == 202770) then --Casted  CDs w/o Aura
+		-----------------------------------------------------------------------------------------------------------------
+		--Casted  CDs w/o Aura (fury of Elune)
+		-----------------------------------------------------------------------------------------------------------------
+		if (event == "SPELL_CAST_SUCCESS") and (spellId == 202770) then --Casted  CDs w/o Aura (fury of Elune)
 			--local namePrint, _, icon = GetSpellInfo(spellId)
 			--print(sourceName.." Summoned "..spellId.." "..namePrint.." "..substring(destGUID, -7).." fPB")
 			if castedAuraIds[spellId] then
@@ -1520,7 +1525,7 @@ function fPB:CLEU()
 						end
 						if sourceGUID_Kick then
 							print(sourceName.." kicked "..(select(1, UnitChannelInfo(unit))).." channel cast w/ "..name.. " from "..destName)
-							tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID})
+							tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID, ["spellSchool"] = spellSchool})
 							UpdateAllNameplates()
 							Ctimer(interruptsIds[spellId], function()
 								if Interrupted[destGUID] then
@@ -1550,6 +1555,7 @@ function fPB:CLEU()
 							break
 						end
 					end
+
 					if unit then
 					 --print(unit.." C_Covenants is: "..C_Covenants.GetActiveCovenantID(unit))
 					end
@@ -1578,7 +1584,7 @@ function fPB:CLEU()
 					end
 					if sourceGUID_Kick then
 						print(sourceName.." kicked cast w/ "..name.. " from "..destName)
-						tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID})
+						tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID, ["spellSchool"] = spellSchool})
 						UpdateAllNameplates()
 						Ctimer(interruptsIds[spellId], function()
 							if Interrupted[destGUID] then
@@ -1588,6 +1594,23 @@ function fPB:CLEU()
 					 	end)
 					end
 				end
+			end
+		end
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		if ((sourceGUID ~= nil) and (event == "SPELL_CAST_SUCCESS") and (spellId == 235219)) then --Reset Cold Snap (Resets Block/Barrier/Nova/CoC)
+			local needUpdateUnitAura = false
+			if (Interrupted[sourceGUID] ~= nil) then
+				for k, v in pairs(Interrupted[sourceGUID]) do
+					if v.spellSchool then
+						if v.spellSchool == 16 then
+							needUpdateUnitAura = true
+							Interrupted[sourceGUID][k] = nil
+						end
+					end
+				end
+			end
+			if needUpdateUnitAura then
+				UpdateAllNameplates()
 			end
 		end
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
