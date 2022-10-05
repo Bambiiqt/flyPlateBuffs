@@ -39,7 +39,9 @@ local bit_band = bit.band
 local Interrupted = {}
 local Earthen = { }
 local Grounding = { }
+local WarBanner = { }
 local Barrier = { }
+local SGrounds = { }
 local SmokeBombAuras = { }
 
 local DefaultSettings = {
@@ -396,6 +398,24 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		end
 	end
 
+	if spellId == 236321 then -- WarBanner (Totems Need a Spawn Time Check)
+		if caster then
+			local guid = UnitGUID(caster)
+			local spawnTime
+			local unitType, _, _, _, _, _, spawnUID = strsplit("-", guid)
+			if unitType == "Creature" or unitType == "Vehicle" then
+			local spawnEpoch = GetServerTime() - (GetServerTime() % 2^23)
+			local spawnEpochOffset = bit.band(tonumber(string.sub(spawnUID, 5), 16), 0x7fffff)
+			spawnTime = spawnEpoch + spawnEpochOffset
+			--print("WarBanner Buff Check at: "..spawnTime)
+			end
+			if WarBanner[spawnTime] then
+			duration = WarBanner[spawnTime].duration
+			expiration = WarBanner[spawnTime].expiration
+			end
+		end
+	end
+
 	-----------------------------------------------------------------------------------------------------------------
 	--SmokeBomb Check For Arena
 	-----------------------------------------------------------------------------------------------------------------
@@ -423,6 +443,16 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		if caster and Barrier[UnitGUID(caster)] then
 			duration = Barrier[UnitGUID(caster)].duration
 			expiration = Barrier[UnitGUID(caster)].expiration
+		end
+	end
+
+	-----------------------------------------------------------------------------------------------------------------
+	--SGrounds Add Timer Check For Arena
+	-----------------------------------------------------------------------------------------------------------------
+	if spellId == 289655 then -- SGrounds
+		if caster and SGrounds[UnitGUID(caster)] then
+			duration = SGrounds[UnitGUID(caster)].duration
+			expiration = SGrounds[UnitGUID(caster)].expiration
 		end
 	end
 
@@ -1291,7 +1321,7 @@ function fPB:CLEU()
 					Earthen[spawnTime] = {}
 				end
 			Earthen[spawnTime] = { ["duration"] = duration, ["expiration"] = expiration }
-			Ctimer(duration + 1, function()	-- execute in some close next frame to accurate use of UnitAura function
+			Ctimer(duration + .2, function()	-- execute in some close next frame to accurate use of UnitAura function
 			Earthen[spawnTime] = nil
 			end)
 			Ctimer(.2, function()	-- execute a second timer to ensure it catches
@@ -1321,7 +1351,7 @@ function fPB:CLEU()
 					Grounding[spawnTime] = {}
 				end
 				Grounding[spawnTime] = { ["duration"] = duration, ["expiration"] = expiration }
-				Ctimer(duration + 1, function()	-- execute in some close next frame to accurate use of UnitAura function
+				Ctimer(duration + .2, function()	-- execute in some close next frame to accurate use of UnitAura function
 				Grounding[spawnTime] = nil
 				end)
 				Ctimer(.2, function()	-- execute a second timer to ensure it catches
@@ -1330,6 +1360,37 @@ function fPB:CLEU()
 				end
 			UpdateAllNameplates()
 			end
+
+
+			-----------------------------------------------------------------------------------------------------------------
+			--WarBanner Check (Totems Need a Spawn Time Check)
+			-----------------------------------------------------------------------------------------------------------------
+			if ((event == "SPELL_SUMMON") or (event == "SPELL_CREATE")) and (spellId == 236320) then
+				if (destGUID ~= nil) then
+					local duration = 15
+					local guid = destGUID
+					local spawnTime
+					local unitType, _, _, _, _, _, spawnUID = strsplit("-", guid)
+					if unitType == "Creature" or unitType == "Vehicle" then
+			    local spawnEpoch = GetServerTime() - (GetServerTime() % 2^23)
+			    local spawnEpochOffset = bit.band(tonumber(string.sub(spawnUID, 5), 16), 0x7fffff)
+			    spawnTime = spawnEpoch + spawnEpochOffset
+			    --print("WarBanner Totem Spawned at: "..spawnTime)
+					end
+					local expiration = GetTime() + duration
+					if (WarBanner[spawnTime] == nil) then --source becomes the totem ><
+						WarBanner[spawnTime] = {}
+					end
+					WarBanner[spawnTime] = { ["duration"] = duration, ["expiration"] = expiration }
+					Ctimer(duration + .2, function()	-- execute in some close next frame to accurate use of UnitAura function
+					WarBanner[spawnTime] = nil
+					end)
+					Ctimer(.2, function()	-- execute a second timer to ensure it catches
+					UpdateAllNameplates()
+					end)
+					end
+				UpdateAllNameplates()
+				end
 
 			-----------------------------------------------------------------------------------------------------------------
 			--SmokeBomb Check
@@ -1371,6 +1432,26 @@ function fPB:CLEU()
 			UpdateAllNameplates()
 			end
 
+			-----------------------------------------------------------------------------------------------------------------
+			--SGrounds Check
+			-----------------------------------------------------------------------------------------------------------------
+			if ((event == "SPELL_CAST_SUCCESS") and (spellId == 34861)) then
+				if (sourceGUID ~= nil) then
+				local duration = 5
+				local expiration = GetTime() + duration
+					if (SGrounds[sourceGUID] == nil) then
+						SGrounds[sourceGUID] = {}
+					end
+					SGrounds[sourceGUID] = { ["duration"] = duration, ["expiration"] = expiration }
+					Ctimer(duration + 1, function()	-- execute iKn some close next frame to accurate use of UnitAura function
+					SGrounds[sourceGUID] = nil
+					end)
+					Ctimer(.2, function()	-- execute a second timer to ensure it catches
+					UpdateAllNameplates()
+					end)
+				end
+			UpdateAllNameplates()
+			end
 			-----------------------------------------------------------------------------------------------------------------
 			--Summoned Spells Check
 			-----------------------------------------------------------------------------------------------------------------
