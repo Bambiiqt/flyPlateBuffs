@@ -1456,10 +1456,8 @@ function fPB:CLEU()
 			--Summoned Spells Check
 			-----------------------------------------------------------------------------------------------------------------
 
-		if (event == "SPELL_SUMMON") or (event == "SPELL_CREATE") then --Summoned CDs
-			--local namePrint, _, icon = GetSpellInfo(spellId)
-			--print(sourceName.." Summoned "..spellId.." "..namePrint.." "..substring(destGUID, -7).." fPB")
-			if castedAuraIds[spellId] then
+		if ((event == "SPELL_SUMMON") or (event == "SPELL_CREATE"))  then --Summoned CDs
+			if castedAuraIds[spellId] and sourceGUID and (bit_band(sourceFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE) then
 				local guid = destGUID
 				local duration = castedAuraIds[spellId]
 				local type = "HARMFUL"
@@ -1472,7 +1470,7 @@ function fPB:CLEU()
 					icon = 2065626
 				end
 
-				--print(sourceName.." Summoned "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
+				print(sourceName.." Summoned "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
 
 				local stack = 0
 				local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
@@ -1524,15 +1522,13 @@ function fPB:CLEU()
 		-----------------------------------------------------------------------------------------------------------------
 		--Casted  CDs w/o Aura (fury of Elune)
 		-----------------------------------------------------------------------------------------------------------------
-		if (event == "SPELL_CAST_SUCCESS") and (spellId == 202770) then --Casted  CDs w/o Aura (fury of Elune)
-			--local namePrint, _, icon = GetSpellInfo(spellId)
-			--print(sourceName.." Summoned "..spellId.." "..namePrint.." "..substring(destGUID, -7).." fPB")
-			if castedAuraIds[spellId] then
+		if (event == "SPELL_CAST_SUCCESS") and (spellId == 202770)  then --Casted  CDs w/o Aura (fury of Elune)
+			if castedAuraIds[spellId] and sourceGUID and (bit_band(sourceFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE) then
 				local guid = destGUID
 				local duration = castedAuraIds[spellId]
 				local type = "HARMFUL"
 				local namePrint, _, icon = GetSpellInfo(spellId)
-				--print(sourceName.." Summoned "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
+				print(sourceName.." Casted "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
 				local stack = 0
 				local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
 				local expiration = GetTime() + duration
