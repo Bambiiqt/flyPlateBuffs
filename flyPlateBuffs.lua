@@ -890,6 +890,35 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 	DrawOnPlate(frame)
 end
 
+local creatureId = {
+
+	[95072] = {60, 136024}, --Greater Earth Elemntal
+	[61056] = {60, 136024}, --Primal Earth Elemntal
+	[95061] = {30, 135790}, --Greater Fire Elemntal
+	[61029] = {30, 135790}, --Primal Fire Elemntal
+	[77942] = {30, 2065626}, --Greater Storm Elemntal
+	[77936] = {30, 2065626}, --Primal Storm Elemntal
+	[29264] = {15, 237577}, --Spirit Wolf
+	[100820] = {15, 237577}, --Spirit Wolf
+	['Spirit Wolf'] = {15, 237577}, --Spirit Wolf
+
+	[27829] = {30 , 132182}, --Ebon Gargoyle
+	[510] = {45, 135862}, --Water Elemental
+	[19668] = {15, 136199}, --Shadowfiend
+	[1964] = {30, 132129}, --Treant
+	[31216] = {30, 135994}, --Mirrorr Image
+	["Infernal"] = {60, 136219}, --Infernal
+
+--Pets--
+	[26125] = {0, 237511}, --Raise Ghoul
+	[1863] = {0, 136220}, --Succubas
+	[185317] = {0, 136220}, --Inncubas
+	[417] = {0, 136217}, --Fel hunter
+	[416] = {0, 136218}, --Imp
+	[1860] = {0, 136221}, --Voidwalker
+
+}
+
 function fPB.UpdateAllNameplates(updateOptions)
 	for i, p in ipairs(C_NamePlate_GetNamePlates()) do
 		local unit = p.namePlateUnitToken
@@ -911,6 +940,64 @@ local function Nameplate_Added(...)
 			frame.UnitFrame.BuffFrame:SetAlpha(1)
 		else
 			frame.UnitFrame.BuffFrame:SetAlpha(0)	--Hide terrible standart debuff frame
+		end
+	end
+
+	local guid = UnitGUID(nameplateID)
+	local unitType, _, _, _, _, ID, spawnUID = strsplit("-", guid)
+	if unitType == "Creature" or unitType == "Vehicle" or unitType == "Pet" then --and UnitIsEnemy("player" , nameplateID) then --or unitType == "Pet"  then
+		local spawnEpoch = GetServerTime() - (GetServerTime() % 2^23)
+		local spawnEpochOffset = bit_band(tonumber(substring(spawnUID, 5), 16), 0x7fffff)
+		spawnTime = spawnEpoch + spawnEpochOffset
+		local nameCreature = UnitName(nameplateID)
+		local type = "HARMFUL"
+		local duration, expiration, icon, scale, tracked, seen
+		local stack = 0
+		local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
+		if unitType == "Creature" or unitType == "Vehicle" then scale = 1.3 elseif unitType =="Pet" then scale = 1.1 end
+		local durationSize = 0
+		local stackSize = 0
+		local id = 1 --Need to figure this out
+		local upTime = tonumber((GetServerTime() % 2^23) - (spawnTime % 2^23))
+		print(nameCreature.." "..unitType..":"..ID.." alive for: "..((GetServerTime() % 2^23) - (spawnTime % 2^23)))
+		if creatureId[tonumber(ID)] or creatureId[nameCreature] then
+			duration = creatureId[tonumber(ID)][1]
+			icon = creatureId[tonumber(ID)][2]
+			expiration = GetTime() + (duration - upTime)
+			if not Interrupted[guid] then
+				Interrupted[guid] = {}
+			end
+			if Interrupted[guid] then
+				for k, v in pairs(Interrupted[guid]) do
+					if v.ID then
+						seen = true
+						break
+					end
+				end
+			end
+			if not seen then
+				if (duration - upTime) < 0 then --Permanent
+					expiration = GetTime() + 1;	duration = 0
+				end
+				print(nameCreature.." "..unitType..":"..ID.." alive for: "..upTime)
+				local tablespot = #Interrupted[guid] + 1
+				tblinsert (Interrupted[guid], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, ["ID"] = ID})
+				if duration - (GetServerTime() - spawnTime) > 0 then
+					Ctimer(duration - (GetServerTime() - spawnTime) , function()
+						if Interrupted[guid] then
+							Interrupted[guid][tablespot] = nil
+							UpdateAllNameplates()
+						end
+					end)
+				else
+					Ctimer(500 , function()
+						if Interrupted[guid] then
+							Interrupted[guid][tablespot] = nil
+							UpdateAllNameplates()
+						end
+					end)
+				end
+			end
 		end
 	end
 
@@ -1216,23 +1303,23 @@ local interruptsIds = {
 }
 
 local castedAuraIds = {
-	[188616] = 60, --Shaman Earth Ele "Greater Earth Elemental", has sourceGUID [summonid]
-	[118323] = 60, --Shaman Primal Earth Ele "Primal Earth Elemental", has sourceGUID [summonid]
-	[188592] = 60, --Shaman Fire Ele "Fire Elemental", has sourceGUID [summonid]
-	[118291] = 60, --Shaman Primal Fire Ele "Primal Fire Earth Elemental", has sourceGUID [summonid]
-	[157299] = 30, --Storm Ele , has sourceGUID [summonid]
+	--[188616] = 60, --Shaman Earth Ele "Greater Earth Elemental", has sourceGUID [summonid]
+	--[118323] = 60, --Shaman Primal Earth Ele "Primal Earth Elemental", has sourceGUID [summonid]
+	--[188592] = 60, --Shaman Fire Ele "Fire Elemental", has sourceGUID [summonid]
+	--[118291] = 60, --Shaman Primal Fire Ele "Primal Fire Earth Elemental", has sourceGUID [summonid]
+	--[157299] = 30, --Storm Ele , has sourceGUID [summonid]
 	--[205636]= 10, --Druid Trees "Treant", has sourceGUID (spellId and Summons are different) [spellbookid]
-	[248280] = 10, --Druid Trees "Treant", has sourceGUID (spellId and Summons are different) [summonid]
-	[288853] = 25, --Dk Raise Abomination "Abomination" same Id has sourceGUID
-	[123904] = 24,--WW Xuen Pet Summmon "Xuen" same Id has sourceGUID
-	[34433] = 15, --Disc Pet Summmon Sfiend "Shadowfiend" same Id has sourceGUID
-	[123040] = 12,  --Disc Pet Summmon Bender "Mindbender" same Id has sourceGUID
-	[111685] = 30, --Warlock Infernals,  has sourceGUID (spellId and Summons are different) [spellbookid]
-	[205180] = 20, --Warlock Darkglare
-	[265187] = 15, --Demonic Tyrant
+	--[248280] = 10, --Druid Trees "Treant", has sourceGUID (spellId and Summons are different) [summonid]
+	--[288853] = 25, --Dk Raise Abomination "Abomination" same Id has sourceGUID
+	--[123904] = 24,--WW Xuen Pet Summmon "Xuen" same Id has sourceGUID
+	--[34433] = 15, --Disc Pet Summmon Sfiend "Shadowfiend" same Id has sourceGUID
+	--[123040] = 12,  --Disc Pet Summmon Bender "Mindbender" same Id has sourceGUID
+	--[111685] = 30, --Warlock Infernals,  has sourceGUID (spellId and Summons are different) [spellbookid]
+	--[205180] = 20, --Warlock Darkglare
+	--[265187] = 15, --Demonic Tyrant
 	[8143] = 10, --Tremor Totem ***ONLY WORKS FOR THE CASTER
-	[321686] = 40, --Mirror Image
-	[353601] = 15, --Fel Obelisk
+	--[321686] = 40, --Mirror Image
+	--[353601] = 15, --Fel Obelisk
 
 	--Casted Spells
 	[202770] = 8, --Fury of Elune
