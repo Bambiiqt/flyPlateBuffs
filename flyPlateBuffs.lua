@@ -624,7 +624,9 @@ local function UpdateBuffIcon(self)
 
 	if db.showDuration and self.expiration > 0 then
 		if db.durationPosition == 1 or db.durationPosition == 3 then
-			self.durationtext:SetFont(fPB.font, (self.durationSize or db.durationSize), "NORMAL")
+			if (self.durationSize and self.durationSize > 0) or (db.durationSize and db.durationSize > 0 ) then
+				self.durationtext:SetFont(fPB.font, (self.durationSize or db.durationSize), "NORMAL")
+			end
 			self.durationBg:Show()
 		else
 			self.durationtext:SetFont(fPB.font, (self.durationSize or db.durationSize), "OUTLINE")

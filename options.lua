@@ -13,7 +13,7 @@ local linkColor = fPB.linkColor
 function fPB.OptionsOnEnable()
 	db = fPB.db.profile
 
-	fPB.BuildSpellList()
+		fPB.BuildSpellList()
 end
 
 local tooltip = tooltip or CreateFrame("GameTooltip", "fPBScanSpellDescTooltip", UIParent, "GameTooltipTemplate")
@@ -957,13 +957,10 @@ local description
 local function TextureString(spellId)
 	if not tonumber(spellId) then
 		return "\124TInterface\\Icons\\Inv_misc_questionmark:0\124t"
-	elseif TextureStringCache[spellId] then
-		return TextureStringCache[spellId]
 	else
 		_,_,iconTexture = GetSpellInfo(spellId)
 		if iconTexture then
 			iconTexture = "\124T"..iconTexture..":0\124t"
-			TextureStringCache[spellId] = iconTexture
 			return iconTexture
 		else
 			return "\124TInterface\\Icons\\Inv_misc_questionmark:0\124t"
@@ -1022,12 +1019,9 @@ function fPB.BuildSpellList()
 			spellDesc = L["No spell ID"]
 		end
 
-		local buildName = iconTexture.." "..color..name.." (x"..(Spell.scale or "1")..")"
-		if tonumber(spellId) then
-			buildName = buildName.."  id:"..spellId.."|r"
-		else
-			buildName = buildName.."|r"
-		end
+		local buildName = (Spell.scale or "1").." ".. iconTexture..color..name
+		buildName = buildName.."|r"
+
 
 		spellTable[tostring(s)] = {
 			name = buildName,
@@ -1083,7 +1077,7 @@ function fPB.BuildSpellList()
 					max = maxTextSize,
 					step = 1,
 				},
-				spellId = {
+			spellId = {
 					order = 5,
 					type = "input",
 					name = L["Spell ID"],
@@ -1097,7 +1091,7 @@ function fPB.BuildSpellList()
 								local spellName = GetSpellInfo(spellId)
 								if spellName then
 									if spellId ~= Spell.spellId and spellName == Spell.name then	-- correcting or adding the id
-										fPB.ChangespellId(s, spellId)
+										--fPB.ChangespellId(s, spellId)
 									elseif spellId ~= Spell.spellId and spellName ~= Spell.name then
 										DEFAULT_CHAT_FRAME:AddMessage(spellId..chatColor..L[" It is ID of completely different spell "]..linkColor.."|Hspell:"..spellId.."|h["..GetSpellInfo(spellId).."]|h"..chatColor..L[". You can add it by using top editbox."])
 									end
