@@ -347,13 +347,6 @@ fPB.MainOptionTable = {
 					name = L["Hide permanent effects"],
 					desc = L["Do not show effects without duration."],
 				},
-				notHideOnPersonalResource = {
-					order = 5,
-					type = "toggle",
-					width = "double",
-					name = L["Don't hide buffs on personal resource bar"],
-					desc = L["Requires ReloadUI"],
-				},
 				blank2 = {
 					order = 6,
 					type = "description",

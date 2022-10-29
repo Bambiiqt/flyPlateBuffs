@@ -50,7 +50,6 @@ local DefaultSettings = {
 		showBuffs = 3,			-- 1 = all, 2 = mine + spellList, 3 = only spellList, 4 = only mine, 5 = none
 		showTooltip = false,
 		hidePermanent = true,
-		notHideOnPersonalResource = true,
 
 		showOnPlayers = true,
 		showOnPets = true,
@@ -640,17 +639,20 @@ local function UpdateBuffIcon(self)
 		if db.stackPosition == 2 or db.stackPosition == 3 then
 			if db.stackOverride then
 				self.stacktext:SetFont(fPB.stackFont, (db.stackSize), "OUTLINE")
+				self.stacktext:SetText(text)
 			elseif not db.stackOverride and (self.stackSize and self.stackSize > 1) then
 				self.stacktext:SetFont(fPB.stackFont, (self.stackSize), "OUTLINE")
+				self.stacktext:SetText(text)
 			end
 		else
 			if db.stackOverride then
 				self.stacktext:SetFont(fPB.stackFont, (db.stackSize), "OUTLINE")
+				self.stacktext:SetText(text)
 			elseif not db.stackOverride and (self.stackSize and self.stackSize > 1) then
 				self.stacktext:SetFont(fPB.stackFont, (self.stackSize), "OUTLINE")
+				self.stacktext:SetText(text)
 			end
 		end
-		self.stacktext:SetText(text)
 		self.stacktext:Show()
 	end
 end
@@ -956,14 +958,6 @@ local UpdateAllNameplates = fPB.UpdateAllNameplates
 local function Nameplate_Added(...)
 	local nameplateID = ...
 	local frame = C_NamePlate_GetNamePlateForUnit(nameplateID)
-		if frame.UnitFrame and frame.UnitFrame.BuffFrame then
-		if db.notHideOnPersonalResource and UnitIsUnit(nameplateID,"player") then
-			frame.UnitFrame.BuffFrame:SetAlpha(1)
-		else
-			frame.UnitFrame.BuffFrame:SetAlpha(0)	--Hide terrible standart debuff frame
-		end
-	end
-
 	local guid = UnitGUID(nameplateID)
 	local unitType, _, _, _, _, ID, spawnUID = strsplit("-", guid)
 	if unitType == "Creature" or unitType == "Vehicle" or unitType == "Pet" then --and UnitIsEnemy("player" , nameplateID) then --or unitType == "Pet"  then
