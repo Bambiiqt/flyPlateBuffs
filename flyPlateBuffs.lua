@@ -550,7 +550,10 @@ local function iconOnUpdate(self, elapsed)
 				if f > 0.5 then
 					f = 1 - f
 				end
-				self:SetAlpha(f * 3)
+				f = math.floor((f * 3) * 100)/100
+				if f < 1 then
+				self:SetAlpha(f)
+				end
 			end
 		end
 	end
@@ -624,25 +627,29 @@ local function UpdateBuffIcon(self)
 
 	if db.showDuration and self.expiration > 0 then
 		if db.durationPosition == 1 or db.durationPosition == 3 then
-			if (self.durationSize and self.durationSize > 0) or (db.durationSize and db.durationSize > 0 ) then
-				self.durationtext:SetFont(fPB.font, (self.durationSize or db.durationSize), "NORMAL")
-			end
+			self.durationtext:SetFont(fPB.font, (self.durationSize or db.durationSize), "NORMAL")
 			self.durationBg:Show()
 		else
 			self.durationtext:SetFont(fPB.font, (self.durationSize or db.durationSize), "OUTLINE")
 		end
 		self.durationtext:Show()
 	end
-	if self.stack > 1 then
-		self.stacktext:SetText(tostring(self.stack))
+	if self.stack > 1 and type(tostring(self.stack)) == "string" then
+		local text = tostring(self.stack)
 		if db.stackPosition == 2 or db.stackPosition == 3 then
-			self.stacktext:SetFont(fPB.stackFont, (self.stackSize or db.stackSize), "OUTLINE")
-			--self.stackBg:SetWidth(self.stacktext:GetStringWidth())
-			--self.stackBg:SetHeight(self.stacktext:GetStringHeight())
-			--self.stackBg:Show()
+			if db.stackOverride then
+				self.stacktext:SetFont(fPB.stackFont, (db.stackSize), "OUTLINE")
+			elseif not db.stackOverride and (self.stackSize and self.stackSize > 1) then
+				self.stacktext:SetFont(fPB.stackFont, (self.stackSize), "OUTLINE")
+			end
 		else
-			self.stacktext:SetFont(fPB.stackFont, (self.stackSize or db.stackSize), "OUTLINE")
+			if db.stackOverride then
+				self.stacktext:SetFont(fPB.stackFont, (db.stackSize), "OUTLINE")
+			elseif not db.stackOverride and (self.stackSize and self.stackSize > 1) then
+				self.stacktext:SetFont(fPB.stackFont, (self.stackSize), "OUTLINE")
+			end
 		end
+		self.stacktext:SetText(text)
 		self.stacktext:Show()
 	end
 end
@@ -674,18 +681,15 @@ local function UpdateBuffIconOptions(self)
 		self.durationBg:ClearAllPoints()
 		if db.durationPosition == 1 then
 			-- under icon
-			self.durationtext:SetFont(fPB.font, (self.durationSize or db.durationSize), "NORMAL")
-			self.durationtext:SetPoint("TOP", self, "BOTTOM", 0, -1)
+			self.durationtext:SetPoint("TOP", self, "BOTTOM", db.durationSizeX, db.durationSizeY)
 			self.durationBg:SetPoint("CENTER", self.durationtext)
 		elseif db.durationPosition == 3 then
 			-- above icon
-			self.durationtext:SetFont(fPB.font, (self.durationSize or db.durationSize), "NORMAL")
-			self.durationtext:SetPoint("BOTTOM", self, "TOP", 0, 1)
+			self.durationtext:SetPoint("BOTTOM", self, "TOP", db.durationSizeX, db.durationSizeY)
 			self.durationBg:SetPoint("CENTER", self.durationtext)
 		else
 			-- on icon
-			self.durationtext:SetFont(fPB.font, (self.durationSize or db.durationSize), "OUTLINE")
-			self.durationtext:SetPoint("CENTER", self, "CENTER", 0, 0)
+			self.durationtext:SetPoint("CENTER", self, "CENTER", db.durationSizeX, db.durationSizeY)
 		end
 		if not colorTransition then
 			self.durationtext:SetTextColor(db.colorSingle[1],db.colorSingle[2],db.colorSingle[3],1)
@@ -697,17 +701,31 @@ local function UpdateBuffIconOptions(self)
 	self.stacktext:SetTextColor(db.stackColor[1],db.stackColor[2],db.stackColor[3],1)
 	if db.stackPosition == 1 then
 		-- on icon
-		self.stacktext:SetFont(fPB.stackFont, (self.stackSize or db.stackSize), "OUTLINE")
-		self.stacktext:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -1, 3)
+		if db.stackOverride then
+			self.stacktext:SetFont(fPB.stackFont, (db.stackSize), "OUTLINE")
+		elseif not db.stackOverride and (self.stackSize and self.stackSize > 1) then
+			self.stacktext:SetFont(fPB.stackFont, (self.stackSize), "OUTLINE")
+		end
+		self.stacktext:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", db.stackSizeX, db.stackSizeY)
 	elseif db.stackPosition == 2 then
 		-- under icon
-		self.stacktext:SetFont(fPB.stackFont, (self.stackSize or db.stackSize), "NORMAL")
-		self.stacktext:SetPoint("TOP", self, "BOTTOM", 0, -1)
+		if db.stackOverride then
+			self.stacktext:SetFont(fPB.stackFont, (db.stackSize), "NORMAL")
+		elseif not db.stackOverride and (self.stackSize and self.stackSize > 1) then
+			self.stacktext:SetFont(fPB.stackFont, (self.stackSize), "NORMAL")
+		end
+		self.stacktext:SetPoint("TOP", self, "BOTTOM", db.stackSizeX, db.stackSizeY)
 		self.stackBg:SetPoint("CENTER", self.stacktext)
 	else
 		-- above icon
-		self.stacktext:SetFont(fPB.stackFont, (self.stackSize or db.stackSize), "OUTLINE") --Change to OUTLINE
-		self.stacktext:SetPoint("BOTTOM", self, "TOP", 7, -7)  --CHRIS
+		--if (db.stackSize and db.stackSize > 0) then
+		if db.stackOverride then
+			self.stacktext:SetFont(fPB.stackFont, (db.stackSize), "OUTLINE")
+		elseif not db.stackOverride and (self.stackSize and self.stackSize > 1) then
+			self.stacktext:SetFont(fPB.stackFont, (self.stackSize), "OUTLINE")
+		end
+	--	end
+		self.stacktext:SetPoint("BOTTOM", self, "TOP", db.stackSizeX, db.stackSizeY)  --CHRIS
 		self.stackBg:SetPoint("CENTER", self.stacktext)
 	end
 
@@ -961,10 +979,16 @@ local function Nameplate_Added(...)
 		local stackSize = 0
 		local id = 1 --Need to figure this out
 		local upTime = tonumber((GetServerTime() % 2^23) - (spawnTime % 2^23))
-		print(nameCreature.." "..unitType..":"..ID.." alive for: "..((GetServerTime() % 2^23) - (spawnTime % 2^23)))
-		if creatureId[tonumber(ID)] or creatureId[nameCreature] then
+		--print(nameCreature.." "..unitType..":"..ID.." alive for: "..((GetServerTime() % 2^23) - (spawnTime % 2^23)))
+		if creatureId[tonumber(ID)] then
 			duration = creatureId[tonumber(ID)][1]
 			icon = creatureId[tonumber(ID)][2]
+		end
+		if creatureId[nameCreature] then
+			duration = creatureId[nameCreature][1]
+			icon =  creatureId[nameCreature][2]
+		end
+		if icon then
 			expiration = GetTime() + (duration - upTime)
 			if not Interrupted[guid] then
 				Interrupted[guid] = {}
@@ -992,19 +1016,18 @@ local function Nameplate_Added(...)
 						end
 					end)
 				else
-					Ctimer(500 , function()
-						if Interrupted[guid] then
-							Interrupted[guid][tablespot] = nil
-							UpdateAllNameplates()
-						end
-					end)
+						Ctimer(500 , function()
+							if Interrupted[guid] then
+								Interrupted[guid][tablespot] = nil
+								UpdateAllNameplates()
+							end
+						end)
+					end
 				end
 			end
 		end
+		UpdateUnitAuras(nameplateID)
 	end
-
-	UpdateUnitAuras(nameplateID)
-end
 local function Nameplate_Removed(...)
 	local nameplateID = ...
 	local frame = C_NamePlate_GetNamePlateForUnit(nameplateID)
@@ -1199,19 +1222,20 @@ local function Initialize()
 	CacheSpells()
 
 	config:RegisterOptionsTable(AddonName, fPB.MainOptionTable)
-	fPBMainOptions = dialog:AddToBlizOptions(AddonName, AddonName)
+	--fPBMainOptions = dialog:AddToBlizOptions(AddonName, AddonName)
 
 	config:RegisterOptionsTable(AddonName.." Spells", fPB.SpellsTable)
-	fPBSpellsList = dialog:AddToBlizOptions(AddonName.." Spells", L["Specific spells"], AddonName)
+	--fPBSpellsList = dialog:AddToBlizOptions(AddonName.." Spells", L["Specific spells"], AddonName)
 
 	config:RegisterOptionsTable(AddonName.." Profiles", LibStub("AceDBOptions-3.0"):GetOptionsTable(fPB.db))
-	fPBProfilesOptions = dialog:AddToBlizOptions(AddonName.." Profiles", L["Profiles"], AddonName)
+	--fPBProfilesOptions = dialog:AddToBlizOptions(AddonName.." Profiles", L["Profiles"], AddonName)
 
 	SLASH_FLYPLATEBUFFS1, SLASH_FLYPLATEBUFFS2 = "/fpb", "/pb"
 	function SlashCmdList.FLYPLATEBUFFS(msg, editBox)
-		InterfaceOptionsFrame_OpenToCategory(fPBMainOptions)
-		InterfaceOptionsFrame_OpenToCategory(fPBSpellsList)
-		InterfaceOptionsFrame_OpenToCategory(fPBMainOptions)
+		--InterfaceOptionsFrame_OpenToCategory(fPBMainOptions)
+		--InterfaceOptionsFrame_OpenToCategory(fPBSpellsList)
+		--InterfaceOptionsFrame_OpenToCategory(fPBMainOptions)
+		dialog:Open(AddonName)
 	end
 end
 

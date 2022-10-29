@@ -10,16 +10,11 @@ local	DISABLE = DISABLE
 local chatColor = fPB.chatColor
 local linkColor = fPB.linkColor
 
-function fPB.OptionsOnEnable()
-	db = fPB.db.profile
 
-		fPB.BuildSpellList()
-end
 
 local tooltip = tooltip or CreateFrame("GameTooltip", "fPBScanSpellDescTooltip", UIParent, "GameTooltipTemplate")
 tooltip:Show()
 tooltip:SetOwner(UIParent, "ANCHOR_NONE")
-
 
 local minIconSize = 10
 local maxIconSize = 100
@@ -37,6 +32,268 @@ local function CheckSort()
 		i = i+1
 	end
 	return false
+end
+
+local newSpellName
+
+fPB.SpellsTable = {
+	name = L["Specific spells"],
+	type = "group",
+	childGroups = "tree",
+	args = {
+		addSpell = {
+			order = 1,
+			type = "input",
+			name = L["Add new spell to list"],
+			desc = L["Enter spell ID or name (case sensitive)\nand press OK"],
+			set = function(info, value)
+				if value then
+					local spellId = tonumber(value)
+					if spellId then
+						local spellName = GetSpellInfo(spellId)
+						if spellName then
+							newSpellName = spellName
+							fPB.AddNewSpell(spellId)
+						end
+					else
+						newSpellName = value
+						fPB.AddNewSpell(newSpellName)
+					end
+				end
+			end,
+			get = function(info)
+				return newSpellName
+			end,
+		},
+		blank = {
+			order = 2,
+			type = "description",
+			name = "",
+			width = "normal",
+		},
+		showspellId = {
+			type = "toggle",
+			order = 3,
+			name = L["Show spell ID in tooltips"],
+			desc = L["Usefull for configuring spell list.\nRequires ReloadUI to turn off."],
+			get = function(info)
+				return db[info[#info]]
+			end,
+			set = function(info,value)
+				db.showspellId = value
+				if value then
+					fPB.showspellId()
+				end
+			end,
+		},
+
+		-- fills up with BuildSpellList()
+	},
+}
+
+
+local color
+local iconTexture
+local TextureStringCache = {}
+local description
+local function TextureString(spellId)
+	if not tonumber(spellId) then
+		return "\124TInterface\\Icons\\Inv_misc_questionmark:0\124t"
+	else
+		_,_,iconTexture = GetSpellInfo(spellId)
+		if iconTexture then
+			iconTexture = "\124T"..iconTexture..":0\124t"
+			return iconTexture
+		else
+			return "\124TInterface\\Icons\\Inv_misc_questionmark:0\124t"
+		end
+	end
+end
+
+local function cmp_col1(a, b)
+	if (a and b) then
+		local Spells = db.Spells
+		a = tostring(Spells[a].scale or a)
+		b = tostring(Spells[b].scale or b)
+ 		return a > b
+	end
+end
+
+local function cmp_col1_col2(a, b)
+	if (a and b) then
+		local Spells = db.Spells
+		a1 = tostring(Spells[a].scale or a)
+		b1 = tostring(Spells[b].scale or b)
+		a2 = tostring(Spells[a].name or a)
+		b2 = tostring(Spells[b].name or b)
+	 if a1 > b1 then return true end
+	 if a1 < b1 then return false end
+		 return a2 < b2
+	 end
+end
+
+function fPB.BuildSpellList()
+	local spellTable = fPB.SpellsTable.args
+	for item in pairs(spellTable) do
+		if item ~= "addSpell" and item ~= "blank" and item ~= "showspellId" then
+			spellTable[item] = nil
+		end
+	end
+	local spellList = {}
+	local Spells = db.Spells
+	local Ignored = db.ignoredDefaultSpells
+	for spell in pairs(Spells) do
+		if not Ignored[spell] then
+			table_insert(spellList, spell)
+		end
+	end
+	table_sort(spellList, cmp_col1)
+	table_sort(spellList, cmp_col1_col2)
+	for i = 1, #spellList do
+		local s = spellList[i]
+		local Spell = Spells[s]
+		local name = Spell.name and Spell.name or (GetSpellInfo(s) and GetSpellInfo(s) or tostring(s))
+		local spellId = Spell.spellId
+		if Spell.show == 1 then
+			color = "|cFF00FF00" --green
+		elseif Spell.show == 3 then
+			color = "|cFFFF0000" --red
+		else
+			color = "|cFFFFFF00" --yellow
+		end
+
+		iconTexture = TextureString(spellId)
+
+		if tonumber(spellId) then
+			tooltip:SetHyperlink("spell:"..spellId)
+			local lines = tooltip:NumLines()
+			if lines > 0 then
+				spellDesc = _G["fPBScanSpellDescTooltipTextLeft"..lines]:GetText() or "??"
+			end
+		else
+			spellDesc = L["No spell ID"]
+		end
+
+		local buildName = (Spell.scale or "1").." ".. iconTexture..color..name
+		buildName = buildName.."|r"
+
+
+		spellTable[tostring(s)] = {
+			name = buildName,
+			desc = spellDesc,
+			type = "group",
+			order = 10 + i,
+			get = function(info)
+				return Spell[info[2]]
+			end,
+			set = function(info, value)
+				Spell[info[2]] = value
+				fPB.BuildSpellList()
+				UpdateAllNameplates()
+			end,
+			args = {
+				show = {
+					order = 1,
+					name = L["Show"],
+					type = "select",
+					style = "dropdown",
+					values = {
+						L["Always"],
+						L["Only mine"],
+						L["Never"],
+						L["On ally only"],
+						L["On enemy only"],
+					},
+				},
+				scale = {
+					order = 2,
+					name = L["Icon scale"],
+					type = "range",
+					min = 0.1,
+					max = 5,
+					softMin = 0.5,
+					softMax  = 3,
+					step = 0.01,
+					bigStep = 0.1,
+				},
+				stackSize = {
+					order = 3,
+					name = L["Stack font size"],
+					type = "range",
+					min = minTextSize,
+					max = maxTextSize,
+					step = 1,
+				},
+				durationSize = {
+					order = 4,
+					name = L["Duration font size"],
+					type = "range",
+					min = minTextSize,
+					max = maxTextSize,
+					step = 1,
+				},
+			spellId = {
+					order = 5,
+					type = "input",
+					name = L["Spell ID"],
+					get = function(info)
+						return Spell.spellId and tostring(Spell.spellId) or L["No spell ID"]
+					end,
+					set = function(info, value)
+						if value then
+							local spellId = tonumber(value)
+							if spellId then
+								local spellName = GetSpellInfo(spellId)
+								if spellName then
+									if spellId ~= Spell.spellId and spellName == Spell.name then	-- correcting or adding the id
+										--fPB.ChangespellId(s, spellId)
+									elseif spellId ~= Spell.spellId and spellName ~= Spell.name then
+										DEFAULT_CHAT_FRAME:AddMessage(spellId..chatColor..L[" It is ID of completely different spell "]..linkColor.."|Hspell:"..spellId.."|h["..GetSpellInfo(spellId).."]|h"..chatColor..L[". You can add it by using top editbox."])
+									end
+								else
+									DEFAULT_CHAT_FRAME:AddMessage(tostring(spellId)..chatColor..L[" Incorrect ID"])
+								end
+							else
+								DEFAULT_CHAT_FRAME:AddMessage(tostring(spellId)..chatColor..L[" Incorrect ID"])
+							end
+						fPB.BuildSpellList()
+						UpdateAllNameplates()
+						end
+					end,
+				},
+				checkID = {
+					order = 6,
+					type = "toggle",
+					name = L["Check spell ID"],
+					set = function(info, value)
+						if value and not Spell.spellId then
+							Spell.checkID = nil
+							DEFAULT_CHAT_FRAME:AddMessage(tostring(spellId)..chatColor..L[" Incorrect ID"])
+						else
+							Spell.checkID = value
+						end
+						fPB.CacheSpells()
+						UpdateAllNameplates()
+					end,
+				},
+				removeSpell = {
+					order = 7,
+					type = "execute",
+					name = L["Remove spell"],
+					confirm = true,
+					func = function(info)
+						fPB.RemoveSpell(s)
+					end,
+				},
+			},
+		}
+	end
+end
+
+function fPB.OptionsOnEnable()
+	db = fPB.db.profile
+
+		fPB.BuildSpellList()
 end
 
 fPB.MainOptionTable = {
@@ -199,6 +456,7 @@ fPB.MainOptionTable = {
 				},
 			},
 		},
+		spells = fPB.SpellsTable,
 		styleSettings = {
 			order = 2,
 			name = L["Style settings"],
@@ -304,13 +562,6 @@ fPB.MainOptionTable = {
 					step = 1,
 					disabled = function() return not db.showDuration end,
 				},
-				colorTransition = {
-					order = 12,
-					type = "toggle",
-					name = L["Enable color transition"],
-					desc = L["Duration text will change its color based on time left"],
-					disabled = function() return not db.showDuration end,
-				},
 				colorSingle = {
 					order = 13,
 					type = "color",
@@ -333,6 +584,29 @@ fPB.MainOptionTable = {
 					max		= 0.5,
 					step	= 0.05,
 					isPercent = true,
+				},
+				durationSizeX = {
+					order = 14.5,
+					type = "range",
+					name = L["X Position"],
+					min = -10,
+					max = 10,
+					step = .1,
+				},
+				durationSizeY = {
+					order = 14.75,
+					type = "range",
+					name = L["Y Position"],
+					min = -10,
+					max = 10,
+					step = .1,
+				},
+				colorTransition = {
+					order = 14.8,
+					type = "toggle",
+					name = L["Enable color transition"],
+					desc = L["Duration text will change its color based on time left"],
+					disabled = function() return not db.showDuration end,
 				},
 				headerStack = {
 					order = 15,
@@ -365,16 +639,8 @@ fPB.MainOptionTable = {
 						UpdateAllNameplates(true)
 					end,
 				},
-				stackSize = {
-					order = 18,
-					type = "range",
-					name = L["Stack font size"],
-					min = minTextSize,
-					max = maxTextSize,
-					step = 1,
-				},
 				stackColor = {
-					order = 19,
+					order = 18,
 					type = "color",
 					name = L["Select Stack Color"],
 					get = function(info)
@@ -384,13 +650,43 @@ fPB.MainOptionTable = {
 						db.stackColor = {r, g, b}
 					end,
 				},
-				headerOther = {
+				stackSize = {
+					order = 19,
+					type = "range",
+					name = L["Stack font size"],
+					min = minTextSize,
+					max = maxTextSize,
+					step = 1,
+				},
+				stackSizeX = {
+					order = 19.25,
+					type = "range",
+					name = L["X Position"],
+					min = -10,
+					max = 10,
+					step = .1,
+				},
+				stackSizeY = {
+					order = 19.75,
+					type = "range",
+					name = L["Y Position"],
+					min = -10,
+					max = 10,
+					step = .1,
+				},
+				stackOverride = {
 					order = 20,
+					type = "toggle",
+					name = L["Override Icon Stack Size"],
+					desc = L["Also will stack size for all icon sizes over scaling with Icon"],
+				},
+				headerOther = {
+					order = 21,
 					type = "header",
 					name = L["Non-fPB duration options"],
 				},
 				showStdCooldown = {
-					order = 21,
+					order = 21.5,
 					type = "toggle",
 					name = L["Duration on icon"],
 					desc = L["Support standart blizzard or OmniCC"],
@@ -892,245 +1188,3 @@ fPB.MainOptionTable = {
 		},
 	},
 }
-
-local newSpellName
-
-fPB.SpellsTable = {
-	name = L["Specific spells"],
-	type = "group",
-	childGroups = "tree",
-	args = {
-		addSpell = {
-			order = 1,
-			type = "input",
-			name = L["Add new spell to list"],
-			desc = L["Enter spell ID or name (case sensitive)\nand press OK"],
-			set = function(info, value)
-				if value then
-					local spellId = tonumber(value)
-					if spellId then
-						local spellName = GetSpellInfo(spellId)
-						if spellName then
-							newSpellName = spellName
-							fPB.AddNewSpell(spellId)
-						end
-					else
-						newSpellName = value
-						fPB.AddNewSpell(newSpellName)
-					end
-				end
-			end,
-			get = function(info)
-				return newSpellName
-			end,
-		},
-		blank = {
-			order = 2,
-			type = "description",
-			name = "",
-			width = "normal",
-		},
-		showspellId = {
-			type = "toggle",
-			order = 3,
-			name = L["Show spell ID in tooltips"],
-			desc = L["Usefull for configuring spell list.\nRequires ReloadUI to turn off."],
-			get = function(info)
-				return db[info[#info]]
-			end,
-			set = function(info,value)
-				db.showspellId = value
-				if value then
-					fPB.showspellId()
-				end
-			end,
-		},
-
-		-- fills up with BuildSpellList()
-	},
-}
-
-local color
-local iconTexture
-local TextureStringCache = {}
-local description
-local function TextureString(spellId)
-	if not tonumber(spellId) then
-		return "\124TInterface\\Icons\\Inv_misc_questionmark:0\124t"
-	else
-		_,_,iconTexture = GetSpellInfo(spellId)
-		if iconTexture then
-			iconTexture = "\124T"..iconTexture..":0\124t"
-			return iconTexture
-		else
-			return "\124TInterface\\Icons\\Inv_misc_questionmark:0\124t"
-		end
-	end
-end
-local function SortSpellList(a,b)
-	if (a and b) then
-		local Spells = db.Spells
-		a = tostring(Spells[a].name or a)
-		b = tostring(Spells[b].name or b)
-		if a ~= b then
-			return a < b
-		end
-	end
-end
-function fPB.BuildSpellList()
-	local spellTable = fPB.SpellsTable.args
-	for item in pairs(spellTable) do
-		if item ~= "addSpell" and item ~= "blank" and item ~= "showspellId" then
-			spellTable[item] = nil
-		end
-	end
-	local Spells = db.Spells
-	local Ignored = db.ignoredDefaultSpells
-	local spellList = {}
-	for spell in pairs(Spells) do
-		if not Ignored[spell] then
-			table_insert(spellList, spell)
-		end
-	end
-	table_sort(spellList,SortSpellList)
-
-	for i = 1, #spellList do
-		local s = spellList[i]
-		local Spell = Spells[s]
-		local name = Spell.name and Spell.name or (GetSpellInfo(s) and GetSpellInfo(s) or tostring(s))
-		local spellId = Spell.spellId
-		if Spell.show == 1 then
-			color = "|cFF00FF00" --green
-		elseif Spell.show == 3 then
-			color = "|cFFFF0000" --red
-		else
-			color = "|cFFFFFF00" --yellow
-		end
-
-		iconTexture = TextureString(spellId)
-
-		if tonumber(spellId) then
-			tooltip:SetHyperlink("spell:"..spellId)
-			local lines = tooltip:NumLines()
-			if lines > 0 then
-				spellDesc = _G["fPBScanSpellDescTooltipTextLeft"..lines]:GetText() or "??"
-			end
-		else
-			spellDesc = L["No spell ID"]
-		end
-
-		local buildName = (Spell.scale or "1").." ".. iconTexture..color..name
-		buildName = buildName.."|r"
-
-
-		spellTable[tostring(s)] = {
-			name = buildName,
-			desc = spellDesc,
-			type = "group",
-			order = 10 + i,
-			get = function(info)
-				return Spell[info[2]]
-			end,
-			set = function(info, value)
-				Spell[info[2]] = value
-				fPB.BuildSpellList()
-				UpdateAllNameplates()
-			end,
-			args = {
-				show = {
-					order = 1,
-					name = L["Show"],
-					type = "select",
-					style = "dropdown",
-					values = {
-						L["Always"],
-						L["Only mine"],
-						L["Never"],
-						L["On ally only"],
-						L["On enemy only"],
-					},
-				},
-				scale = {
-					order = 2,
-					name = L["Icon scale"],
-					type = "range",
-					min = 0.1,
-					max = 5,
-					softMin = 0.5,
-					softMax  = 3,
-					step = 0.01,
-					bigStep = 0.1,
-				},
-				stackSize = {
-					order = 3,
-					name = L["Stack font size"],
-					type = "range",
-					min = minTextSize,
-					max = maxTextSize,
-					step = 1,
-				},
-				durationSize = {
-					order = 4,
-					name = L["Duration font size"],
-					type = "range",
-					min = minTextSize,
-					max = maxTextSize,
-					step = 1,
-				},
-			spellId = {
-					order = 5,
-					type = "input",
-					name = L["Spell ID"],
-					get = function(info)
-						return Spell.spellId and tostring(Spell.spellId) or L["No spell ID"]
-					end,
-					set = function(info, value)
-						if value then
-							local spellId = tonumber(value)
-							if spellId then
-								local spellName = GetSpellInfo(spellId)
-								if spellName then
-									if spellId ~= Spell.spellId and spellName == Spell.name then	-- correcting or adding the id
-										--fPB.ChangespellId(s, spellId)
-									elseif spellId ~= Spell.spellId and spellName ~= Spell.name then
-										DEFAULT_CHAT_FRAME:AddMessage(spellId..chatColor..L[" It is ID of completely different spell "]..linkColor.."|Hspell:"..spellId.."|h["..GetSpellInfo(spellId).."]|h"..chatColor..L[". You can add it by using top editbox."])
-									end
-								else
-									DEFAULT_CHAT_FRAME:AddMessage(tostring(spellId)..chatColor..L[" Incorrect ID"])
-								end
-							else
-								DEFAULT_CHAT_FRAME:AddMessage(tostring(spellId)..chatColor..L[" Incorrect ID"])
-							end
-						fPB.BuildSpellList()
-						UpdateAllNameplates()
-						end
-					end,
-				},
-				checkID = {
-					order = 6,
-					type = "toggle",
-					name = L["Check spell ID"],
-					set = function(info, value)
-						if value and not Spell.spellId then
-							Spell.checkID = nil
-							DEFAULT_CHAT_FRAME:AddMessage(tostring(spellId)..chatColor..L[" Incorrect ID"])
-						else
-							Spell.checkID = value
-						end
-						fPB.CacheSpells()
-						UpdateAllNameplates()
-					end,
-				},
-				removeSpell = {
-					order = 7,
-					type = "execute",
-					name = L["Remove spell"],
-					confirm = true,
-					func = function(info)
-						fPB.RemoveSpell(s)
-					end,
-				},
-			},
-		}
-	end
-end

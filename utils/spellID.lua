@@ -27,6 +27,7 @@ function fPB.showspellId()
 
 	local function onSetHyperlink(self, link)
 		local type, id = string.match(link,"^(%a+):(%d+)")
+		print(type)
 		if not type or not id then return end
 		if type == "spell" then
 			addLine(self, id, types.spell)
