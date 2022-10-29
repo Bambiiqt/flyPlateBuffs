@@ -458,6 +458,7 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 
 	-- showDebuffs  1 = all, 2 = mine + spellList, 3 = only spellList, 4 = only mine, 5 = none
 	-- listedSpell.show  -- 1 = always, 2 = mine, 3 = never, 4 = on ally, 5 = on enemy
+
 	if not listedSpell then
 		if db.hidePermanent and duration == 0 then
 			return

@@ -341,13 +341,6 @@ fPB.MainOptionTable = {
 							L["None"],
 					},
 				},
-				showTooltip = {
-					order = 3,
-					type = "toggle",
-					name = L["Show tooltip"],
-					desc = L["Show tooltip on mouseover"],
-					set = function(info,val) db.showTooltip = val;UpdateAllNameplates(true) end,
-				},
 				hidePermanent = {
 					order = 4,
 					type = "toggle",
