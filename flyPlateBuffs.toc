@@ -22,9 +22,6 @@ locales\frFR.lua
 locales\koKR.lua
 locales\zhCN.lua
 
-utils\fixBlizzard.lua
-utils\spellID.lua
-
 spellList.lua
 flyPlateBuffs.lua
 options.lua

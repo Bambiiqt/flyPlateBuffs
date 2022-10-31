@@ -59,9 +59,6 @@ local DefaultSettings = {
 		showOnFriend = true,
 		showOnNeutral = true,
 
-		showOnlyInCombat = false,
-		showUnitInCombat = false,
-
 		parentWorldFrame = false,
 
 		baseWidth = 24,
@@ -122,46 +119,57 @@ local DefaultSettings = {
 		ignoredDefaultSpells = {},
 
 		showspellId = false,
-
-		nameplateMaxDistance,
-		nameplateInset,
-		disableFriendlyDebuffs,
 		blizzardCountdown,
-		fixNames,
 	},
 }
 
 do --add default spells
-for i=1, #defaultSpells1 do
-	local spellId = defaultSpells1[i]
-	local name = GetSpellInfo(spellId)
-	if name then
-		DefaultSettings.profile.Spells[spellId] = {
-			name = name,
-			spellId = spellId,
-			scale = 2,
-			durationSize = 18,
-			show = 1,	-- 1 = always, 2 = mine, 3 = never, 4 = on ally, 5 = on enemy
-			stackSize = 18,
-		}
+	for i=1, #defaultSpells1 do
+		local spellId = defaultSpells1[i]
+		local name = GetSpellInfo(spellId)
+		if name then
+			DefaultSettings.profile.Spells[spellId] = {
+				name = name,
+				spellId = spellId,
+				scale = 2,
+				durationSize = 18,
+				show = 1,	-- 1 = always, 2 = mine, 3 = never, 4 = on ally, 5 = on enemy
+				stackSize = 18,
+			}
+		end
+	end
+
+	for i=1, #defaultSpells2 do
+		local spellId = defaultSpells2[i]
+		local name = GetSpellInfo(spellId)
+		if name then
+			DefaultSettings.profile.Spells[spellId] = {
+				name = name,
+				spellId = spellId,
+				scale = 1.5,
+				durationSize = 14,
+				show = 1,	-- 1 = always, 2 = mine, 3 = never, 4 = on ally, 5 = on enemy
+				stackSize = 14,
+			}
+		end
 	end
 end
 
-for i=1, #defaultSpells2 do
-	local spellId = defaultSpells2[i]
-	local name = GetSpellInfo(spellId)
-	if name then
-		DefaultSettings.profile.Spells[spellId] = {
-			name = name,
-			spellId = spellId,
-			scale = 1.55,
-			durationSize = 14,
-			show = 1,	-- 1 = always, 2 = mine, 3 = never, 4 = on ally, 5 = on enemy
-			stackSize = 14,
-		}
-	end
+local hexFontColors = {
+    ["logo"] = "ff36ffe7",
+    ["accent"] = "ff9b6ef3",
+    ["value"] = "ffffe981",
+    ["blizzardFont"] = NORMAL_FONT_COLOR:GenerateHexColor(),
+}
+
+local function Colorize(text, color)
+    if not text then return end
+    local hexColor = hexFontColors[color] or hexFontColors["blizzardFont"]
+    return "|c" .. hexColor .. text .. "|r"
 end
 
+local function Print(msg)
+    print(Colorize("FlyPlateBuffs", "logo") .. ": " .. msg)
 end
 
 --timeIntervals
@@ -506,9 +514,6 @@ local function ScanUnitBuffs(nameplateID, frame)
 end
 
 local function FilterUnits(nameplateID)
-
-	if db.showOnlyInCombat and not UnitAffectingCombat("player") then return true end -- InCombatLockdown()
-	if db.showUnitInCombat and not UnitAffectingCombat(nameplateID) then return true end
 
 	-- filter units
 	if UnitIsUnit(nameplateID,"player") then return true end
@@ -1063,8 +1068,8 @@ function fPB.CacheSpells() -- spells filtered by names, not checking id
 end
 local CacheSpells = fPB.CacheSpells
 
-function fPB.AddNewSpell(spell)
-	local defaultSpell
+function fPB.AddNewSpell(spell, npc)
+	local defaultSpell, name
 	if db.ignoredDefaultSpells[spell] then
 		db.ignoredDefaultSpells[spell] = nil
 		defaultSpell = true
@@ -1079,9 +1084,10 @@ function fPB.AddNewSpell(spell)
 			return
 		end
 	end
-	local name = GetSpellInfo(spellId)
-	print("fPB Added Spell Name: "..name)
-	print("fPB Added SpellId: "..spellId)
+
+	if not npc then
+		name = GetSpellInfo(spellId)
+	end
 	if spellId and name then
 		if not db.Spells[spellId] then
 			db.Spells[spellId] = {
@@ -1093,6 +1099,16 @@ function fPB.AddNewSpell(spell)
 				durationSize = db.durationSize,
 			}
 		end
+	elseif npc then
+		print("fPB Added NPC: "..spell)
+		db.Spells[spell] = {
+			show = 1,
+			name = spell,
+			scale = 1,
+			stackSize = db.stackSize,
+			durationSize = db.durationSize,
+			spellTypeNPC = true,
+		}
 	else
 		db.Spells[spell] = {
 			show = 1,
@@ -1102,9 +1118,12 @@ function fPB.AddNewSpell(spell)
 			durationSize = db.durationSize,
 		}
 	end
-
 	CacheSpells()
-	fPB.BuildSpellList()
+	if not npc then
+		fPB.BuildSpellList()
+	else
+		fPB.BuildNPCList()
+	end
 	UpdateAllNameplates(true)
 end
 function fPB.RemoveSpell(spell)
@@ -1114,9 +1133,10 @@ function fPB.RemoveSpell(spell)
 	db.Spells[spell] = nil
 	CacheSpells()
 	fPB.BuildSpellList()
+	fPB.BuildNPCList()
 	UpdateAllNameplates(true)
 end
-function fPB.ChangespellId(oldID, newID)
+function fPB.ChangespellId(oldID, newID, npc)
 	if db.Spells[newID] then
 		DEFAULT_CHAT_FRAME:AddMessage(chatColor..L["Spell with this ID is already in the list. Its name is "]..linkColor.."|Hspell:"..newID.."|h["..GetSpellInfo(newID).."]|h|r")
 		return
@@ -1252,8 +1272,10 @@ fPB.Events:SetScript("OnEvent", function(self, event, ...)
 		Initialize()
 	elseif event == "PLAYER_LOGIN" then
 		fPB.OptionsOnEnable()
-		fPB.FixBlizzard()
-		if db.showspellId then fPB.showspellId() end
+		Print(format("Type %s or %s to open the options panel.", Colorize("/fPB", "accent"), Colorize("/pb", "accent")))
+		if db.blizzardCountdown then
+			SetCVar("countdownForCooldowns", 1)
+		end
 		MSQ = LibStub("Masque", true)
 		if MSQ then
 			Group = MSQ:Group(AddonName)
@@ -1266,14 +1288,8 @@ fPB.Events:SetScript("OnEvent", function(self, event, ...)
 
 		fPB.Events:RegisterEvent("NAME_PLATE_UNIT_ADDED")
 		fPB.Events:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
-
-
-		if db.showOnlyInCombat then
-			fPB.RegisterCombat()
-		else
-			fPB.Events:RegisterEvent("UNIT_AURA")
-			fPB.Events:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-		end
+		fPB.Events:RegisterEvent("UNIT_AURA")
+		fPB.Events:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 	elseif event == "PLAYER_REGEN_DISABLED" then
 		fPB.Events:RegisterEvent("UNIT_AURA")
 		UpdateAllNameplates()

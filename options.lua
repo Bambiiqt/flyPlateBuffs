@@ -34,64 +34,6 @@ local function CheckSort()
 	return false
 end
 
-local newSpellName
-
-fPB.SpellsTable = {
-	name = L["Specific spells"],
-	type = "group",
-	childGroups = "tree",
-	args = {
-		addSpell = {
-			order = 1,
-			type = "input",
-			name = L["Add new spell to list"],
-			desc = L["Enter spell ID or name (case sensitive)\nand press OK"],
-			set = function(info, value)
-				if value then
-					local spellId = tonumber(value)
-					if spellId then
-						local spellName = GetSpellInfo(spellId)
-						if spellName then
-							newSpellName = spellName
-							fPB.AddNewSpell(spellId)
-						end
-					else
-						newSpellName = value
-						fPB.AddNewSpell(newSpellName)
-					end
-				end
-			end,
-			get = function(info)
-				return newSpellName
-			end,
-		},
-		blank = {
-			order = 2,
-			type = "description",
-			name = "",
-			width = "normal",
-		},
-		showspellId = {
-			type = "toggle",
-			order = 3,
-			name = L["Show spell ID in tooltips"],
-			desc = L["Usefull for configuring spell list.\nRequires ReloadUI to turn off."],
-			get = function(info)
-				return db[info[#info]]
-			end,
-			set = function(info,value)
-				db.showspellId = value
-				if value then
-					fPB.showspellId()
-				end
-			end,
-		},
-
-		-- fills up with BuildSpellList()
-	},
-}
-
-
 local color
 local iconTexture
 local TextureStringCache = {}
@@ -132,6 +74,221 @@ local function cmp_col1_col2(a, b)
 	 end
 end
 
+local newNPCName
+
+fPB.NPCTable = {
+	name = L["Specific NPCs"],
+	type = "group",
+	childGroups = "tree",
+	order = 1.1,
+	args = {
+		addSpell = {
+			order = 1,
+			type = "input",
+			name = L["Add new NPC to list"],
+			desc = L["Enter NPC ID or name (case sensitive)\nand press OK"],
+			set = function(info, value)
+				if value then
+					local npc = true
+					local spellId = tonumber(value)
+					newNPCName = value
+					fPB.AddNewSpell(newNPCName, npc)
+				end
+			end,
+			get = function(info)
+				return newNPCName
+			end,
+		},
+		blank = {
+			order = 2,
+			type = "description",
+			name = "",
+			width = "normal",
+		},
+
+		-- fills up with BuildSpellList()
+	},
+}
+
+function fPB.BuildNPCList()
+	local spellTable = fPB.NPCTable.args
+	for item in pairs(spellTable) do
+		if item ~= "addSpell" and item ~= "blank" and item ~= "showspellId" then
+			spellTable[item] = nil
+		end
+	end
+	local spellList = {}
+	local Spells = db.Spells
+	for spell in pairs(Spells) do
+		if db.Spells[spell].spellTypeNPC then
+			table_insert(spellList, spell)
+		end
+	end
+	table_sort(spellList, cmp_col1)
+	table_sort(spellList, cmp_col1_col2)
+	for i = 1, #spellList do
+		local s = spellList[i]
+		local Spell = Spells[s]
+		local name = Spell.name and Spell.name
+		local spellId = Spell.spellId
+		if Spell.show == 1 then
+			color = "|cFF00FF00" --green
+		elseif Spell.show == 3 then
+			color = "|cFFFF0000" --red
+		else
+			color = "|cFFFFFF00" --yellow
+		end
+		if Spell.spellId then
+			iconTexture = "\124T"..Spell.spellId ..":0\124t"
+		else
+			iconTexture = TextureString(spellId)
+		end
+		spellDesc = L["NPC ID"]
+
+
+		local buildName = (Spell.scale or "1").." ".. iconTexture.." "..color..name
+		buildName = buildName.."|r"
+
+
+		spellTable[tostring(s)] = {
+			name = buildName,
+			desc = spellDesc,
+			type = "group",
+			order = 10 + i,
+			get = function(info)
+				local key = info[#info]
+				local id = info[#info-1]
+				return db.Spells[id][key]
+			end,
+			set = function(info, value)
+				local key = info[#info]
+				local id = info[#info-1]
+				db.Spells[id][key] = value
+				fPB.BuildNPCList()
+				UpdateAllNameplates()
+			end,
+			args = {
+				show = {
+					order = 1,
+					name = L["Show"],
+					type = "select",
+					style = "dropdown",
+					values = {
+						L["Always"],
+						L["Only mine"],
+						L["Never"],
+						L["On ally only"],
+						L["On enemy only"],
+					},
+				},
+				scale = {
+					order = 2,
+					name = L["Icon scale"],
+					type = "range",
+					min = 0.1,
+					max = 5,
+					softMin = 0.5,
+					softMax  = 3,
+					step = 0.01,
+					bigStep = 0.1,
+				},
+				durationSize = {
+					order = 4,
+					name = L["Duration font size"],
+					type = "range",
+					min = minTextSize,
+					max = maxTextSize,
+					step = 1,
+				},
+				durationCLEU = {
+					order = 4.5,
+					name = L["Duration"],
+					desc = L["Duration For NPC Spawn Timer Such as Infernals (Guardians & Minors) or 0 for NPC & Pets"],
+					type = "range",
+					min = 0,
+					max = 60,
+					step = 1,
+				},
+				spellId = {
+						order = 5,
+						type = "input",
+						name = L["Icon ID"],
+						get = function(info)
+							return Spell.spellId and tostring(Spell.spellId) or L["No spell ID"]
+						end,
+						set = function(info, value)
+							if value then
+								local spellId = tonumber(value)
+								db.Spells[s].spellId = spellId
+								DEFAULT_CHAT_FRAME:AddMessage(chatColor..L[" Icon changed "].."|r"..(db.Spells[s].spellId  or "nil")..chatColor.." -> |r"..spellId)
+								UpdateAllNameplates(true)
+								fPB.BuildNPCList()
+							end
+						end,
+					},
+					blank = {
+						order = 2,
+						type = "description",
+						name = "",
+						width = "normal",
+					},
+				removeSpell = {
+					order = 7,
+					type = "execute",
+					name = L["Remove spell"],
+					confirm = true,
+					func = function(info)
+						fPB.RemoveSpell(s)
+					end,
+				},
+			},
+		}
+	end
+end
+
+local newSpellName
+
+fPB.SpellsTable = {
+	name = L["Specific Spells"],
+	type = "group",
+	childGroups = "tree",
+	order = 1,
+	args = {
+		addSpell = {
+			order = 1,
+			type = "input",
+			name = L["Add new spell to list"],
+			desc = L["Enter spell ID or name (case sensitive)\nand press OK"],
+			set = function(info, value)
+				if value then
+					local spellId = tonumber(value)
+					if spellId then
+						local spellName = GetSpellInfo(spellId)
+						if spellName then
+							newSpellName = spellName
+							fPB.AddNewSpell(spellId)
+						end
+					else
+						newSpellName = value
+						fPB.AddNewSpell(newSpellName)
+					end
+				end
+			end,
+			get = function(info)
+				return newSpellName
+			end,
+		},
+		blank = {
+			order = 2,
+			type = "description",
+			name = "",
+			width = "normal",
+		},
+
+		-- fills up with BuildSpellList()
+	},
+}
+
 function fPB.BuildSpellList()
 	local spellTable = fPB.SpellsTable.args
 	for item in pairs(spellTable) do
@@ -143,7 +300,7 @@ function fPB.BuildSpellList()
 	local Spells = db.Spells
 	local Ignored = db.ignoredDefaultSpells
 	for spell in pairs(Spells) do
-		if not Ignored[spell] then
+		if not Ignored[spell] and not db.Spells[spell].spellTypeNPC then
 			table_insert(spellList, spell)
 		end
 	end
@@ -174,7 +331,7 @@ function fPB.BuildSpellList()
 			spellDesc = L["No spell ID"]
 		end
 
-		local buildName = (Spell.scale or "1").." ".. iconTexture..color..name
+		local buildName = (Spell.scale or "1").." ".. iconTexture.." "..color..name
 		buildName = buildName.."|r"
 
 
@@ -184,10 +341,14 @@ function fPB.BuildSpellList()
 			type = "group",
 			order = 10 + i,
 			get = function(info)
-				return Spell[info[2]]
+				local key = info[#info]
+				local id = tonumber(info[#info-1]) or info[#info-1]
+				return db.Spells[id][key]
 			end,
 			set = function(info, value)
-				Spell[info[2]] = value
+				local key = info[#info]
+				local id = tonumber(info[#info-1]) or info[#info-1]
+				db.Spells[id][key] = value
 				fPB.BuildSpellList()
 				UpdateAllNameplates()
 			end,
@@ -235,7 +396,7 @@ function fPB.BuildSpellList()
 			spellId = {
 					order = 5,
 					type = "input",
-					name = L["Spell ID"],
+					name = L["Icon ID"],
 					get = function(info)
 						return Spell.spellId and tostring(Spell.spellId) or L["No spell ID"]
 					end,
@@ -246,7 +407,7 @@ function fPB.BuildSpellList()
 								local spellName = GetSpellInfo(spellId)
 								if spellName then
 									if spellId ~= Spell.spellId and spellName == Spell.name then	-- correcting or adding the id
-										--fPB.ChangespellId(s, spellId)
+										fPB.ChangespellId(s, spellId)
 									elseif spellId ~= Spell.spellId and spellName ~= Spell.name then
 										DEFAULT_CHAT_FRAME:AddMessage(spellId..chatColor..L[" It is ID of completely different spell "]..linkColor.."|Hspell:"..spellId.."|h["..GetSpellInfo(spellId).."]|h"..chatColor..L[". You can add it by using top editbox."])
 									end
@@ -285,6 +446,43 @@ function fPB.BuildSpellList()
 						fPB.RemoveSpell(s)
 					end,
 				},
+				break2 = {
+					order = 10,
+					type = "header",
+					name = L["Spell Type if NOT Aura, Combat Log Events"],
+				},
+				spellDisableAura = {
+					order = 11,
+					type = "toggle",
+					name = L["Disable Aura"],
+					desc = L["Disables the Aura Check, Only Checks the Combat Log"],
+				},
+				spellTypeInterrupt = {
+					order = 11,
+					type = "toggle",
+					name = L["Interrupt"],
+					desc = L["Spell is an Interrupt"],
+				},
+				spellTypeSummon = {
+					order = 11,
+					type = "toggle",
+					name = L["Summoned"],
+					desc = L["Spells uch as Tremmor Totem"],
+				},
+				spellTypeCastedAuras = {
+					order = 11.2,
+					type = "toggle",
+					name = L["Casted Aura"],
+					desc = L["Spells Such as Fury of Elune"],
+				},
+				durationCLEU = {
+					order = 12,
+					name = L["Duration For Event"],
+					type = "range",
+					min = 0,
+					max = 60,
+					step = 1,
+				},
 			},
 		}
 	end
@@ -292,8 +490,8 @@ end
 
 function fPB.OptionsOnEnable()
 	db = fPB.db.profile
-
-		fPB.BuildSpellList()
+	fPB.BuildSpellList()
+	fPB.BuildNPCList()
 end
 
 fPB.MainOptionTable = {
@@ -310,9 +508,11 @@ fPB.MainOptionTable = {
     end,
 
 	args = {
+		spells = fPB.SpellsTable,
+		NPC = fPB.NPCTable,
 		displayConditions = {
-			order = 1,
-			name = L["Display conditions"],
+			order = 2,
+			name = L["Display Conditions"],
 			type = "group",
 			args = {
 				showDebuffs = {
@@ -352,34 +552,6 @@ fPB.MainOptionTable = {
 					type = "description",
 					name = "",
 					width = "normal",
-				},
-				break1 = {
-					order = 7,
-					type = "header",
-					name = L["Combat status"],
-				},
-				showOnlyInCombat = {
-					order = 8,
-					type = "toggle",
-					name = L["Player in combat"],
-					desc = L["Show only if player is in combat"],
-					set = function(info,value)
-						db.showOnlyInCombat = value
-						UpdateAllNameplates()
-						if value then
-							fPB.RegisterCombat()
-							if not InCombatLockdown() then fPB.Events:UnregisterEvent("UNIT_AURA") end
-						else
-							fPB.UnregisterCombat()
-							fPB.Events:RegisterEvent("UNIT_AURA")
-						end
-					end,
-				},
-				showUnitInCombat = {
-					order = 9,
-					type = "toggle",
-					name = L["Unit in combat"],
-					desc = L["Show only if unit is in combat"],
 				},
 				break2 = {
 					order = 10,
@@ -442,10 +614,9 @@ fPB.MainOptionTable = {
 				},
 			},
 		},
-		spells = fPB.SpellsTable,
 		styleSettings = {
-			order = 2,
-			name = L["Style settings"],
+			order = 3,
+			name = L["Style Settings"],
 			type = "group",
 			set = function(info, value)
 				db[info[#info]] = value
@@ -661,35 +832,54 @@ fPB.MainOptionTable = {
 					step = .1,
 				},
 				stackOverride = {
-					order = 20,
+					order = 19.8,
 					type = "toggle",
 					name = L["Override Icon Stack Size"],
 					desc = L["Also will stack size for all icon sizes over scaling with Icon"],
 				},
 				headerOther = {
-					order = 21,
+					order = 20,
 					type = "header",
 					name = L["Non-fPB duration options"],
 				},
 				showStdCooldown = {
-					order = 21.5,
+					order = 21,
 					type = "toggle",
 					name = L["Duration on icon"],
 					desc = L["Support standart blizzard or OmniCC"],
 				},
+				blizzardCountdown = {
+					order =22,
+					type = "toggle",
+					name = L["Enable blizzard Countdown"],
+					desc = L["Changes CVar \"countdownForCooldowns\""],
+					width = "double",
+					get = function(info)
+						return db.blizzardCountdown or (GetCVar("countdownForCooldowns") == "1")
+					end,
+					set = function(info, value)
+						if value then
+							db.blizzardCountdown = true
+							SetCVar("countdownForCooldowns", 1)
+						else
+							db.blizzardCountdown = false
+							SetCVar("countdownForCooldowns", 0)
+						end
+					end,
+				},
 				showStdSwipe = {
-					order = 22,
+					order = 23,
 					type = "toggle",
 					name = L["Show 'clock' animation"],
 					desc = L["Also will show duration if OmniCC installed, regardless of the previous option"],
 				},
 				headerBorder = {
-					order = 23,
+					order = 24,
 					type = "header",
 					name = L["Border"],
 				},
 				borderStyle = {
-					order = 24,
+					order = 24.1,
 					type = "select",
 					style = "dropdown",
 					name = L["Border Style"],
@@ -776,7 +966,7 @@ fPB.MainOptionTable = {
 			},
 		},
 		positionSettings = {
-			order = 3,
+			order = 4,
 			name = L["Position Settings"],
 			type = "group",
 			args = {
@@ -899,7 +1089,7 @@ fPB.MainOptionTable = {
 			},
 		},
 		sortSettings = {
-			order = 4,
+			order = 5,
 			name = L["Sorting"],
 			type = "group",
 			args = {
@@ -1045,130 +1235,6 @@ fPB.MainOptionTable = {
 					name = L["Reverse"],
 					set = function(info,val) db.sortMode[4.5] = val;UpdateAllNameplates() end,
 					get = function(info) return db.sortMode[4.5] end,
-				},
-			},
-		},
-		CVarSettings = {
-			order = 5,
-			name = L["CVars & Other"],
-			desc = L["Some nameplate related Console Variables"],
-			type = "group",
-			args = {
-				nameplateMaxDistance = {
-					order = 1,
-					type = "range",
-					name = L["Nameplate visible distance"],
-					desc = L["Changes CVar \"nameplateMaxDistance\".\nLegion default = 60. Old default = 40."],
-					min = 20,
-					max = 100,
-					step = 5,
-					get = function(info)
-						return db.nameplateMaxDistance or tonumber(GetCVar("nameplateMaxDistance"))
-					end,
-					set = function(info, value)
-						db.nameplateMaxDistance = value
-						SetCVar("nameplateMaxDistance", value)
-					end,
-				},
-				resetMaxDistance = {
-					order = 2,
-					type = "execute",
-					name = L["Reset to default"],
-					desc = L["Addon will no longer control this CVar on login"],
-					func = function(info)
-						db.nameplateMaxDistance = false
-						SetCVar("nameplateMaxDistance", GetCVarDefault("nameplateMaxDistance"))
-					end,
-				},
-				blank1 = {
-					order = 3,
-					type = "description",
-					name = "",
-					width = "normal",
-				},
-				nameplateInset = {
-					order = 4,
-					type = "toggle",
-					name = L["Stops nameplates from clamping to the screen"],
-					desc = L["Sets CVars \"nameplateOtherTopInset\" and \"nameplateOtherBottomInset\" to -1"],
-					width = "full",
-					get = function(info)
-						return db.nameplateInset or ((GetCVar("nameplateOtherTopInset") == "-1") and (GetCVar("nameplateOtherBottomInset") == "-1"))
-					end,
-					set = function(info, value)
-						if value then
-							db.nameplateInset = true
-							SetCVar("nameplateOtherTopInset", -1)
-							SetCVar("nameplateOtherBottomInset", -1)
-						else
-							db.nameplateInset = false
-							for _, v in pairs({"nameplateOtherTopInset", "nameplateOtherBottomInset"}) do
-								SetCVar(v, GetCVarDefault(v))
-							end
-						end
-					end,
-				},
-				disableFriendlyDebuffs = {
-					order = 5,
-					type = "toggle",
-					name = L["Disable debuffs on friendly nameplates"],
-					desc = L["Working in instances. Disabling them may fix many \"Attempt to access forbidden object\" errors.\nChanges CVar \"nameplateShowDebuffsOnFriendly\""],
-					width = "full",
-					get = function(info)
-						return db.disableFriendlyDebuffs or (GetCVar("nameplateShowDebuffsOnFriendly") == "0")
-					end,
-					set = function(info, value)
-						if value then
-							db.disableFriendlyDebuffs = true
-							SetCVar("nameplateShowDebuffsOnFriendly", 0)
-						else
-							db.disableFriendlyDebuffs = false
-							SetCVar("nameplateShowDebuffsOnFriendly", 1)
-						end
-					end,
-				},
-				blizzardCountdown = {
-					order = 6,
-					type = "toggle",
-					name = L["Enable blizzard Countdown"],
-					desc = L["Changes CVar \"countdownForCooldowns\""],
-					width = "full",
-					get = function(info)
-						return db.blizzardCountdown or (GetCVar("countdownForCooldowns") == "1")
-					end,
-					set = function(info, value)
-						if value then
-							db.blizzardCountdown = true
-							SetCVar("countdownForCooldowns", 1)
-						else
-							db.blizzardCountdown = false
-							SetCVar("countdownForCooldowns", 0)
-						end
-					end,
-				},
-				fixNames = {
-					order = 7,
-					type = "toggle",
-					name = L["Fix nameplates without names"],
-					width = "full",
-					set = function(info, value)
-						if value then
-							db.fixNames = true
-							fPB.FixNames() -- need to fire updates to see changes (change target for example)
-						else
-							db.fixNames = false
-						end
-					end
-				},
-				save = {
-					order = 10,
-					type = "execute",
-					name = L["Save CVars"],
-					desc = L["ReloadUI"],
-					confirm = true,
-					func = function()
-						ReloadUI()
-					end,
 				},
 			},
 		},
