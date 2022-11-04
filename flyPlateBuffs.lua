@@ -482,10 +482,10 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		or (type == "HELPFUL" and (db.showBuffs == 4 and not my)) then
 			return
 		end
-		if(listedSpell.show == 1)
+		if((listedSpell.show == 1)
 		or(listedSpell.show == 2 and my)
 		or(listedSpell.show == 4 and isAlly)
-		or(listedSpell.show == 5 and not isAlly) then
+		or(listedSpell.show == 5 and not isAlly)) and not listedSpell.spellDisableAura then
 			AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, listedSpell.scale, listedSpell.durationSize, listedSpell.stackSize, EnemySmokeBomb, spellId )
 			return
 		end
@@ -1340,25 +1340,6 @@ local interruptsIds = {
 }
 
 local castedAuraIds = {
-	--[188616] = 60, --Shaman Earth Ele "Greater Earth Elemental", has sourceGUID [summonid]
-	--[118323] = 60, --Shaman Primal Earth Ele "Primal Earth Elemental", has sourceGUID [summonid]
-	--[188592] = 60, --Shaman Fire Ele "Fire Elemental", has sourceGUID [summonid]
-	--[118291] = 60, --Shaman Primal Fire Ele "Primal Fire Earth Elemental", has sourceGUID [summonid]
-	--[157299] = 30, --Storm Ele , has sourceGUID [summonid]
-	--[205636]= 10, --Druid Trees "Treant", has sourceGUID (spellId and Summons are different) [spellbookid]
-	--[248280] = 10, --Druid Trees "Treant", has sourceGUID (spellId and Summons are different) [summonid]
-	--[288853] = 25, --Dk Raise Abomination "Abomination" same Id has sourceGUID
-	--[123904] = 24,--WW Xuen Pet Summmon "Xuen" same Id has sourceGUID
-	--[34433] = 15, --Disc Pet Summmon Sfiend "Shadowfiend" same Id has sourceGUID
-	--[123040] = 12,  --Disc Pet Summmon Bender "Mindbender" same Id has sourceGUID
-	--[111685] = 30, --Warlock Infernals,  has sourceGUID (spellId and Summons are different) [spellbookid]
-	--[205180] = 20, --Warlock Darkglare
-	--[265187] = 15, --Demonic Tyrant
-	[8143] = 10, --Tremor Totem ***ONLY WORKS FOR THE CASTER
-	--[321686] = 40, --Mirror Image
-	--[353601] = 15, --Fel Obelisk
-
-	--Casted Spells
 	[202770] = 8, --Fury of Elune
 }
 
@@ -1425,35 +1406,36 @@ end
 function fPB:CLEU()
 		local _, event, _, sourceGUID, sourceName, sourceFlags, _, destGUID, destName, destFlags, _, spellId, _, _, _, _, spellSchool = CombatLogGetCurrentEventInfo()
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-----------------------------------------------------------------------------------------------------------------
-	--Earthen Check (Totems Need a Spawn Time Check)
-	-----------------------------------------------------------------------------------------------------------------
-	if ((event == "SPELL_SUMMON") or (event == "SPELL_CREATE")) and (spellId == 198838) then
-		if (destGUID ~= nil) then
-			local duration = 15
-			local guid = destGUID
-			local spawnTime
-			local unitType, _, _, _, _, _, spawnUID = strsplit("-", guid)
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		-----------------------------------------------------------------------------------------------------------------
+		--Earthen Check (Totems Need a Spawn Time Check)
+		-----------------------------------------------------------------------------------------------------------------
+		if ((event == "SPELL_SUMMON") or (event == "SPELL_CREATE")) and (spellId == 198838) then
+			if (destGUID ~= nil) then
+				local duration = 15
+				local guid = destGUID
+				local spawnTime
+				local unitType, _, _, _, _, _, spawnUID = strsplit("-", guid)
 				if unitType == "Creature" or unitType == "Vehicle" then
 			    local spawnEpoch = GetServerTime() - (GetServerTime() % 2^23)
 			    local spawnEpochOffset = bit.band(tonumber(string.sub(spawnUID, 5), 16), 0x7fffff)
 			   	spawnTime = spawnEpoch + spawnEpochOffset
 			    --print("Earthen Totem Spawned at: "..spawnTime)
 				end
-			local expiration = GetTime() + duration
+				local expiration = GetTime() + duration
 				if (Earthen[spawnTime] == nil) then --source becomes the totem ><
 					Earthen[spawnTime] = {}
 				end
-			Earthen[spawnTime] = { ["duration"] = duration, ["expiration"] = expiration }
-			Ctimer(duration + .2, function()	-- execute in some close next frame to accurate use of UnitAura function
-			Earthen[spawnTime] = nil
-			end)
-			Ctimer(.2, function()	-- execute a second timer to ensure it catches
+				Earthen[spawnTime] = { ["duration"] = duration, ["expiration"] = expiration }
+				Ctimer(duration + .2, function()	-- execute in some close next frame to accurate use of UnitAura function
+				Earthen[spawnTime] = nil
+				end)
+				Ctimer(.2, function()	-- execute a second timer to ensure it catches
+					UpdateAllNameplates()
+				end)
+			end
 			UpdateAllNameplates()
-			end)
 		end
-		UpdateAllNameplates()
-	end
 
 		-----------------------------------------------------------------------------------------------------------------
 		--Grounding Check (Totems Need a Spawn Time Check)
@@ -1465,10 +1447,10 @@ function fPB:CLEU()
 				local spawnTime
 				local unitType, _, _, _, _, _, spawnUID = strsplit("-", guid)
 				if unitType == "Creature" or unitType == "Vehicle" then
-		    local spawnEpoch = GetServerTime() - (GetServerTime() % 2^23)
-		    local spawnEpochOffset = bit.band(tonumber(string.sub(spawnUID, 5), 16), 0x7fffff)
-		    spawnTime = spawnEpoch + spawnEpochOffset
-		    --print("Grounding Totem Spawned at: "..spawnTime)
+			    local spawnEpoch = GetServerTime() - (GetServerTime() % 2^23)
+			    local spawnEpochOffset = bit.band(tonumber(string.sub(spawnUID, 5), 16), 0x7fffff)
+			    spawnTime = spawnEpoch + spawnEpochOffset
+			    --print("Grounding Totem Spawned at: "..spawnTime)
 				end
 				local expiration = GetTime() + duration
 				if (Grounding[spawnTime] == nil) then --source becomes the totem ><
@@ -1479,167 +1461,191 @@ function fPB:CLEU()
 				Grounding[spawnTime] = nil
 				end)
 				Ctimer(.2, function()	-- execute a second timer to ensure it catches
-				UpdateAllNameplates()
+					UpdateAllNameplates()
 				end)
-				end
-			UpdateAllNameplates()
 			end
+			UpdateAllNameplates()
+		end
 
-
-			-----------------------------------------------------------------------------------------------------------------
-			--WarBanner Check (Totems Need a Spawn Time Check)
-			-----------------------------------------------------------------------------------------------------------------
-			if ((event == "SPELL_SUMMON") or (event == "SPELL_CREATE")) and (spellId == 236320) then
-				if (destGUID ~= nil) then
-					local duration = 15
-					local guid = destGUID
-					local spawnTime
-					local unitType, _, _, _, _, _, spawnUID = strsplit("-", guid)
-					if unitType == "Creature" or unitType == "Vehicle" then
+		-----------------------------------------------------------------------------------------------------------------
+		--WarBanner Check (Totems Need a Spawn Time Check)
+		-----------------------------------------------------------------------------------------------------------------
+		if ((event == "SPELL_SUMMON") or (event == "SPELL_CREATE")) and (spellId == 236320) then
+			if (destGUID ~= nil) then
+				local duration = 15
+				local guid = destGUID
+				local spawnTime
+				local unitType, _, _, _, _, _, spawnUID = strsplit("-", guid)
+				if unitType == "Creature" or unitType == "Vehicle" then
 			    local spawnEpoch = GetServerTime() - (GetServerTime() % 2^23)
 			    local spawnEpochOffset = bit.band(tonumber(string.sub(spawnUID, 5), 16), 0x7fffff)
 			    spawnTime = spawnEpoch + spawnEpochOffset
 			    --print("WarBanner Totem Spawned at: "..spawnTime)
-					end
-					local expiration = GetTime() + duration
-					if (WarBanner[spawnTime] == nil) then --source becomes the totem ><
-						WarBanner[spawnTime] = {}
-					end
-					WarBanner[spawnTime] = { ["duration"] = duration, ["expiration"] = expiration }
-					Ctimer(duration + .2, function()	-- execute in some close next frame to accurate use of UnitAura function
-					WarBanner[spawnTime] = nil
-					end)
-					Ctimer(.2, function()	-- execute a second timer to ensure it catches
-					UpdateAllNameplates()
-					end)
-					end
-				UpdateAllNameplates()
 				end
+				local expiration = GetTime() + duration
+				if (WarBanner[spawnTime] == nil) then --source becomes the totem ><
+					WarBanner[spawnTime] = {}
+				end
+				WarBanner[spawnTime] = { ["duration"] = duration, ["expiration"] = expiration }
+				Ctimer(duration + .2, function()	-- execute in some close next frame to accurate use of UnitAura function
+					WarBanner[spawnTime] = nil
+				end)
+				Ctimer(.2, function()	-- execute a second timer to ensure it catches
+					UpdateAllNameplates()
+				end)
+			end
+			UpdateAllNameplates()
+		end
 
-			-----------------------------------------------------------------------------------------------------------------
-			--SmokeBomb Check
-			-----------------------------------------------------------------------------------------------------------------
-			if ((event == "SPELL_CAST_SUCCESS") and (spellId == 212182 or spellId == 359053)) then
-				if (sourceGUID ~= nil) then
+		-----------------------------------------------------------------------------------------------------------------
+		--SmokeBomb Check
+		-----------------------------------------------------------------------------------------------------------------
+		if ((event == "SPELL_CAST_SUCCESS") and (spellId == 212182 or spellId == 359053)) then
+			if (sourceGUID ~= nil) then
 				local duration = 5
 				local expiration = GetTime() + duration
-					if (SmokeBombAuras[sourceGUID] == nil) then
-						SmokeBombAuras[sourceGUID] = {}
-					end
-					SmokeBombAuras[sourceGUID] = { ["duration"] = duration, ["expiration"] = expiration }
-					Ctimer(duration + 1, function()	-- execute in some close next frame to accurate use of UnitAura function
+				if (SmokeBombAuras[sourceGUID] == nil) then
+					SmokeBombAuras[sourceGUID] = {}
+				end
+				SmokeBombAuras[sourceGUID] = { ["duration"] = duration, ["expiration"] = expiration }
+				Ctimer(duration + 1, function()	-- execute in some close next frame to accurate use of UnitAura function
 					SmokeBombAuras[sourceGUID] = nil
 					UpdateAllNameplates()
-					end)
-				end
-			UpdateAllNameplates()
+				end)
 			end
+			UpdateAllNameplates()
+		end
 
-			-----------------------------------------------------------------------------------------------------------------
-			--Barrier Check
-			-----------------------------------------------------------------------------------------------------------------
-			if ((event == "SPELL_CAST_SUCCESS") and (spellId == 62618)) then
-				if (sourceGUID ~= nil) then
+		-----------------------------------------------------------------------------------------------------------------
+		--Barrier Check
+		-----------------------------------------------------------------------------------------------------------------
+		if ((event == "SPELL_CAST_SUCCESS") and (spellId == 62618)) then
+			if (sourceGUID ~= nil) then
 				local duration = 10
 				local expiration = GetTime() + duration
-					if (Barrier[sourceGUID] == nil) then
-						Barrier[sourceGUID] = {}
-					end
-					Barrier[sourceGUID] = { ["duration"] = duration, ["expiration"] = expiration }
-					Ctimer(duration + 1, function()	-- execute iKn some close next frame to accurate use of UnitAura function
-					Barrier[sourceGUID] = nil
-					end)
-					Ctimer(.2, function()	-- execute a second timer to ensure it catches
-					UpdateAllNameplates()
-					end)
+				if (Barrier[sourceGUID] == nil) then
+					Barrier[sourceGUID] = {}
 				end
-			UpdateAllNameplates()
+				Barrier[sourceGUID] = { ["duration"] = duration, ["expiration"] = expiration }
+				Ctimer(duration + 1, function()	-- execute iKn some close next frame to accurate use of UnitAura function
+					Barrier[sourceGUID] = nil
+				end)
+				Ctimer(.2, function()	-- execute a second timer to ensure it catches
+					UpdateAllNameplates()
+				end)
 			end
+			UpdateAllNameplates()
+		end
 
-			-----------------------------------------------------------------------------------------------------------------
-			--SGrounds Check
-			-----------------------------------------------------------------------------------------------------------------
-			if ((event == "SPELL_CAST_SUCCESS") and (spellId == 34861)) then
-				if (sourceGUID ~= nil) then
+		-----------------------------------------------------------------------------------------------------------------
+		--SGrounds Check
+		-----------------------------------------------------------------------------------------------------------------
+		if ((event == "SPELL_CAST_SUCCESS") and (spellId == 34861)) then
+			if (sourceGUID ~= nil) then
 				local duration = 5
 				local expiration = GetTime() + duration
-					if (SGrounds[sourceGUID] == nil) then
-						SGrounds[sourceGUID] = {}
-					end
-					SGrounds[sourceGUID] = { ["duration"] = duration, ["expiration"] = expiration }
-					Ctimer(duration + 1, function()	-- execute iKn some close next frame to accurate use of UnitAura function
-					SGrounds[sourceGUID] = nil
-					end)
-					Ctimer(.2, function()	-- execute a second timer to ensure it catches
-					UpdateAllNameplates()
-					end)
+				if (SGrounds[sourceGUID] == nil) then
+					SGrounds[sourceGUID] = {}
 				end
-			UpdateAllNameplates()
+				SGrounds[sourceGUID] = { ["duration"] = duration, ["expiration"] = expiration }
+				Ctimer(duration + 1, function()	-- execute iKn some close next frame to accurate use of UnitAura function
+					SGrounds[sourceGUID] = nil
+				end)
+				Ctimer(.2, function()	-- execute a second timer to ensure it catches
+					UpdateAllNameplates()
+				end)
 			end
-			-----------------------------------------------------------------------------------------------------------------
-			--Summoned Spells Check
-			-----------------------------------------------------------------------------------------------------------------
+			UpdateAllNameplates()
+		end
+	-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+		local Spells = db.Spells
+		local name = GetSpellInfo(spellId)
+		local cachedID = cachedSpells[name]
+		local listedSpell
+
+		if Spells[spellId] and not db.ignoredDefaultSpells[spellId] then
+			listedSpell = Spells[spellId]
+		elseif cachedID then
+			if cachedID == "noid" then
+				listedSpell = Spells[name]
+			else
+				listedSpell = Spells[cachedID]
+			end
+		end
+
+		-----------------------------------------------------------------------------------------------------------------
+		--Summoned Spells Check
+		-----------------------------------------------------------------------------------------------------------------
 		if ((event == "SPELL_SUMMON") or (event == "SPELL_CREATE"))  then --Summoned CDs
-			if castedAuraIds[spellId] and sourceGUID and (bit_band(sourceFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE) then
+			if listedSpell and listedSpell.spellTypeSummon then
+				if sourceGUID and (bit_band(sourceFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE) then isAlly = false else isAlly = true end
 				local guid = destGUID
-				local duration = castedAuraIds[spellId]
-				local type = "HARMFUL"
+				local duration = listedSpell.durationCLEU or 1
+				local type = "HELPFUL"
 				local namePrint, _, icon = GetSpellInfo(spellId)
-
+				local EnemySmokeBomb
+				if listedSpell.RedifEnemy and not isAlly then EnemySmokeBomb = true end
 				if spellId == 321686 then --Mirror Image Icon Change
 					icon = 135994
 				end
 				if spellId == 157299 then
 					icon = 2065626
 				end
-
-				print(sourceName.." Summoned "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
-
+				local my = sourceGUID == UnitGUID("player")
 				local stack = 0
-				local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
+				local debufftype = "Buff" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
 				local expiration = GetTime() + duration
-				local scale = 1.3
-				local durationSize = 0
-				local stackSize = 0
+				local scale = listedSpell.scale
+				local durationSize = listedSpell.durationSize
+				local stackSize = listedSpell.stackSize
 				local id = 1 --Need to figure this out
 				if not Interrupted[sourceGUID] then
 					Interrupted[sourceGUID] = {}
 				end
-				local tablespot = #Interrupted[sourceGUID] + 1
-				tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID,  ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
-				UpdateAllNameplates()
-				local ticker = 1
-				Ctimer(duration, function()
-					if Interrupted[sourceGUID] then
-						for k, v in pairs(Interrupted[sourceGUID]) do
-							if v.spellId == spellId then
-								print(v.sourceName.." Timed Out "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Timer")
-								Interrupted[sourceGUID][k] = nil
-								UpdateAllNameplates()
+				if(listedSpell.show == 1)
+				or(listedSpell.show == 2 and my)
+				or(listedSpell.show == 4 and isAlly)
+				or(listedSpell.show == 5 and not isAlly) then
+					print(sourceName.." Summoned "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
+					local tablespot = #Interrupted[sourceGUID] + 1
+					tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemySmokeBomb = EnemySmokeBomb, sourceGUID = sourceGUID,  ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
+					UpdateAllNameplates()
+					local ticker = 1
+					Ctimer(duration, function()
+						if Interrupted[sourceGUID] then
+							for k, v in pairs(Interrupted[sourceGUID]) do
+								if v.spellId == spellId then
+									print(v.sourceName.." Timed Out "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Timer")
+									Interrupted[sourceGUID][k] = nil
+									UpdateAllNameplates()
+								end
 							end
 						end
-					end
-				end)
-				self.ticker = C_Timer.NewTicker(.25, function()
-					local name = GetSpellInfo(spellId)
-					if Interrupted[sourceGUID] then
-						for k, v in pairs(Interrupted[sourceGUID]) do
-							if v.destGUID then
-                if substring(v.destGUID, -5) == substring(guid, -5) then --string.sub is to help witj Mirror Images bug
-                  if ObjectExists(v.destGUID, ticker, v.namePrint, v.sourceName) then
-	                  print(v.sourceName.." "..ObjectExists(v.destGUID, ticker, v.namePrint, v.sourceName).." "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Ticker")
-                		Interrupted[sourceGUID][k] = nil
-										UpdateAllNameplates()
-                    --self.ticker:Cancel()
-										break
-                  end
-                end
+					end)
+					local iteration, check
+					iteration = duration * 4 + 5; check = .25
+					self.ticker = C_Timer.NewTicker(check, function()
+						local name = GetSpellInfo(spellId)
+						if Interrupted[sourceGUID] then
+							for k, v in pairs(Interrupted[sourceGUID]) do
+								if v.destGUID then
+	                if substring(v.destGUID, -5) == substring(guid, -5) then --string.sub is to help witj Mirror Images bug
+	                  if ObjectExists(v.destGUID, ticker, v.namePrint, v.sourceName) then
+		                  print(v.sourceName.." "..ObjectExists(v.destGUID, ticker, v.namePrint, v.sourceName).." "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Ticker")
+	                		Interrupted[sourceGUID][k] = nil
+											UpdateAllNameplates()
+	                    self.ticker:Cancel()
+											break
+	                  end
+	                end
+								end
 							end
 						end
-					end
-					ticker = ticker + 1
-				end, duration * 4 + 5)
+						ticker = ticker + 1
+					end, iteration)
+				end
 			end
 		end
 
@@ -1680,7 +1686,9 @@ function fPB:CLEU()
 			end
 		end
 
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		-----------------------------------------------------------------------------------------------------------------
+		--Channeled Kicks
+		-----------------------------------------------------------------------------------------------------------------
 		 if (destGUID ~= nil) then --Channeled Kicks
 			if (event == "SPELL_CAST_SUCCESS") and not (event == "SPELL_INTERRUPT") then
 				if interruptsIds[spellId] then
@@ -1698,7 +1706,7 @@ function fPB:CLEU()
 							end
 						end
 						if unit then
-						 --print(unit.." C_Covenants is: "..C_Covenants.GetActiveCovenantID(unit))
+
 					  end
 
 					 if unit and (select(7, UnitChannelInfo(unit)) == false) then
@@ -1739,7 +1747,10 @@ function fPB:CLEU()
 				end
 			end
 		end
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+		-----------------------------------------------------------------------------------------------------------------
+			--Regular Casted Kicks
+		-----------------------------------------------------------------------------------------------------------------
 		if (destGUID ~= nil) then --Regular Casted Kicks
 			if (event == "SPELL_INTERRUPT") then
 				if interruptsIds[spellId] then
@@ -1797,36 +1808,34 @@ function fPB:CLEU()
 				end
 			end
 		end
+
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		if ((sourceGUID ~= nil) and (event == "SPELL_CAST_SUCCESS") and (spellId == 235219)) then --Reset Cold Snap (Resets Block/Barrier/Nova/CoC)
-			local needUpdateUnitAura = false
-			if (Interrupted[sourceGUID] ~= nil) then
-				for k, v in pairs(Interrupted[sourceGUID]) do
-					if v.spellSchool then
-						if v.spellSchool == 16 then
-							needUpdateUnitAura = true
-							Interrupted[sourceGUID][k] = nil
-						end
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------------------------
+	--Reset Cold Snap (Resets Block/Barrier/Nova/CoC)
+	-----------------------------------------------------------------------------------------------------------------
+	if ((sourceGUID ~= nil) and (event == "SPELL_CAST_SUCCESS") and (spellId == 235219)) then --Reset Cold Snap (Resets Block/Barrier/Nova/CoC)
+		local needUpdateUnitAura = false
+		if (Interrupted[sourceGUID] ~= nil) then
+			for k, v in pairs(Interrupted[sourceGUID]) do
+				if v.spellSchool then
+					if v.spellSchool == 16 then
+						needUpdateUnitAura = true
+						Interrupted[sourceGUID][k] = nil
 					end
 				end
 			end
-			if needUpdateUnitAura then
+		end
+		if needUpdateUnitAura then
+			UpdateAllNameplates()
+		end
+	end
+
+	if (((event == "UNIT_DIED") or (event == "UNIT_DESTROYED") or (event == "UNIT_DISSIPATES")) and (select(2, GetPlayerInfoByGUID(destGUID)) ~= "HUNTER")) then
+			if (Interrupted[destGUID] ~= nil) then
+				Interrupted[destGUID]= nil
 				UpdateAllNameplates()
-			end
 		end
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		if ((sourceGUID ~= nil) and (event == "SPELL_CAST_SUCCESS") and (spellId == 235219)) then --coldsnap reset
-			if (Interrupted[SourceGUID] ~= nil) then
-				Interrupted[SourceGUID]= nil
-				UpdateAllNameplates()
-			end
-		end
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		if (((event == "UNIT_DIED") or (event == "UNIT_DESTROYED") or (event == "UNIT_DISSIPATES")) and (select(2, GetPlayerInfoByGUID(destGUID)) ~= "HUNTER")) then
-				if (Interrupted[destGUID] ~= nil) then
-					Interrupted[destGUID]= nil
-					UpdateAllNameplates()
-			end
-		end
+	end
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 end

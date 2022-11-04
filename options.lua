@@ -331,10 +331,13 @@ function fPB.BuildSpellList()
 			spellDesc = L["No spell ID"]
 		end
 
-		local buildName = (Spell.scale or "1").." ".. iconTexture.." "..color..name
+		local buildName
+		if Spell.spellTypeSummon or Spell.spellTypeCastedAuras or Spell.spellTypeInterrupt then
+			buildName = (Spell.scale or "1").." ".. iconTexture.." "..color..">>"..name.."<<"
+		else
+			buildName = (Spell.scale or "1").." ".. iconTexture.." "..color..name
+		end
 		buildName = buildName.."|r"
-
-
 		spellTable[tostring(s)] = {
 			name = buildName,
 			desc = spellDesc,
@@ -396,7 +399,7 @@ function fPB.BuildSpellList()
 			spellId = {
 					order = 5,
 					type = "input",
-					name = L["Icon ID"],
+					name = L["Spell ID"],
 					get = function(info)
 						return Spell.spellId and tostring(Spell.spellId) or L["No spell ID"]
 					end,
@@ -422,8 +425,17 @@ function fPB.BuildSpellList()
 						end
 					end,
 				},
-				checkID = {
+				removeSpell = {
 					order = 6,
+					type = "execute",
+					name = L["Remove spell"],
+					confirm = true,
+					func = function(info)
+						fPB.RemoveSpell(s)
+					end,
+				},
+				checkID = {
+					order = 6.5,
 					type = "toggle",
 					name = L["Check spell ID"],
 					set = function(info, value)
@@ -437,19 +449,16 @@ function fPB.BuildSpellList()
 						UpdateAllNameplates()
 					end,
 				},
-				removeSpell = {
+				RedifEnemy = {
 					order = 7,
-					type = "execute",
-					name = L["Remove spell"],
-					confirm = true,
-					func = function(info)
-						fPB.RemoveSpell(s)
-					end,
+					type = "toggle",
+					name = L["Red if Enemy"],
+					desc = L["Gives the icon a Red Hue indicating a Enemy Aura, Useful for SmokeBomb"],
 				},
 				break2 = {
 					order = 10,
 					type = "header",
-					name = L["Spell Type if NOT Aura, Combat Log Events"],
+					name = L["Spell Type if NOT Aura, Combat Log Events (Requires Timer Duration)"],
 				},
 				spellDisableAura = {
 					order = 11,
@@ -467,7 +476,7 @@ function fPB.BuildSpellList()
 					order = 11,
 					type = "toggle",
 					name = L["Summoned"],
-					desc = L["Spells uch as Tremmor Totem"],
+					desc = L["Spells Such as Tremor Totem or Guardians"],
 				},
 				spellTypeCastedAuras = {
 					order = 11.2,
@@ -479,7 +488,7 @@ function fPB.BuildSpellList()
 					order = 12,
 					name = L["Duration For Event"],
 					type = "range",
-					min = 0,
+					min = 1,
 					max = 60,
 					step = 1,
 				},
