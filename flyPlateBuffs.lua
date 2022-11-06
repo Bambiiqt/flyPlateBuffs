@@ -369,6 +369,9 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		icon = 135890
 	end
 
+	-----------------------------------------------------------------------------------------------------------------
+	-- Earthen Totem (Totems Need a Spawn Time Check)
+	-----------------------------------------------------------------------------------------------------------------
 	if spellId == 201633 then -- Earthen Totem (Totems Need a Spawn Time Check)
 		if caster then
 			local guid = UnitGUID(caster)
@@ -387,6 +390,9 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		end
 	end
 
+	-----------------------------------------------------------------------------------------------------------------
+	-- Grounding (Totems Need a Spawn Time Check)
+	-----------------------------------------------------------------------------------------------------------------
 	if spellId == 8178 then -- Grounding (Totems Need a Spawn Time Check)
 		if caster then
 			local guid = UnitGUID(caster)
@@ -405,6 +411,9 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		end
 	end
 
+	-----------------------------------------------------------------------------------------------------------------
+	-- WarBanner (Totems Need a Spawn Time Check)
+	-----------------------------------------------------------------------------------------------------------------
 	if spellId == 236321 then -- WarBanner (Totems Need a Spawn Time Check)
 		if caster then
 			local guid = UnitGUID(caster)
@@ -598,7 +607,10 @@ local function UpdateBuffIcon(self)
 	else
 		self.texture:SetTexCoord(0, 1, 0, 1)
 	end
-
+	-----------------------------------------------------------------------------------------------------------------
+	----Destaurate Icon if RedifEnemy
+	-----------------------------------------------------------------------------------------------------------------
+	
 	if self.EnemySmokeBomb then
 		self.texture:SetDesaturated(1) --Destaurate Icon
 		self.texture:SetVertexColor(1, .25, 0);
@@ -822,8 +834,9 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 	end
 
 	ScanUnitBuffs(nameplateID, frame)
---CHRIS ADDED INTERRUPTS
---------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------------------------
+	--ADDS CLEU FOUND BUFFS
+	-----------------------------------------------------------------------------------------------------------------
 	if not PlatesBuffs[frame] then
 		if Interrupted[UnitGUID(nameplateID)] then
 			for i = 1, #Interrupted[UnitGUID(nameplateID)] do
@@ -838,7 +851,8 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 			end
 	  end
 	end
------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------------------------
 	if not PlatesBuffs[frame] then
 		if frame.fPBiconsFrame then
 			frame.fPBiconsFrame:Hide()
