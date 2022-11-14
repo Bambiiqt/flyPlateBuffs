@@ -503,8 +503,30 @@ function fPB.OptionsOnEnable()
 	fPB.BuildNPCList()
 end
 
+function fPB.ToggleOptions()
+	DEFAULT_CHAT_FRAME.editBox:SetText("/fpb")
+	ChatEdit_SendText(DEFAULT_CHAT_FRAME.editBox, 0)
+end
+
+fPB.OptionsOpen = {
+	name = L["FlyPlateBuffs Options"],
+	type = "group",
+	args = {
+		removeSpell = {
+			order = 1,
+			type = "execute",
+			name = L["Open Menu"],
+			--confirm = true,
+			func = function(info)
+				fPB.ToggleOptions()
+			end,
+		},
+	},
+}
+
 fPB.MainOptionTable = {
 	name = L["Display options"],
+  --plugins = { profiles = { profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(fPB.db) } },
 	type = "group",
 	childGroups = "tab",
 	get = function(info)

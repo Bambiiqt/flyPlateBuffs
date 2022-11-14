@@ -610,7 +610,7 @@ local function UpdateBuffIcon(self)
 	-----------------------------------------------------------------------------------------------------------------
 	----Destaurate Icon if RedifEnemy
 	-----------------------------------------------------------------------------------------------------------------
-	
+
 	if self.EnemySmokeBomb then
 		self.texture:SetDesaturated(1) --Destaurate Icon
 		self.texture:SetVertexColor(1, .25, 0);
@@ -1251,13 +1251,14 @@ local function Initialize()
 	CacheSpells()
 
 	config:RegisterOptionsTable(AddonName, fPB.MainOptionTable)
-	--fPBMainOptions = dialog:AddToBlizOptions(AddonName, AddonName)
+	config:RegisterOptionsTable(AddonName.." Options", fPB.OptionsOpen)
+	fPBMainOptions = dialog:AddToBlizOptions(AddonName.." Options", AddonName)
 
 	config:RegisterOptionsTable(AddonName.." Spells", fPB.SpellsTable)
 	--fPBSpellsList = dialog:AddToBlizOptions(AddonName.." Spells", L["Specific spells"], AddonName)
 
 	config:RegisterOptionsTable(AddonName.." Profiles", LibStub("AceDBOptions-3.0"):GetOptionsTable(fPB.db))
-	--fPBProfilesOptions = dialog:AddToBlizOptions(AddonName.." Profiles", L["Profiles"], AddonName)
+	fPBProfilesOptions = dialog:AddToBlizOptions(AddonName.." Profiles", L["Profiles"], AddonName)
 
 	SLASH_FLYPLATEBUFFS1, SLASH_FLYPLATEBUFFS2 = "/fpb", "/pb"
 	function SlashCmdList.FLYPLATEBUFFS(msg, editBox)
