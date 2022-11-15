@@ -1720,10 +1720,6 @@ function fPB:CLEU()
 								break
 							end
 						end
-						if unit then
-
-					  end
-
 					 if unit and (select(7, UnitChannelInfo(unit)) == false) then
 						local duration = interruptsIds[spellId]
 					  local type = "HARMFUL"
@@ -1782,11 +1778,6 @@ function fPB:CLEU()
 							break
 						end
 					end
-
-					if unit then
-					 --print(unit.." C_Covenants is: "..C_Covenants.GetActiveCovenantID(unit))
-					end
-
 					local duration = interruptsIds[spellId]
 					local type = "HARMFUL"
 					local name, _, icon = GetSpellInfo(spellId)
