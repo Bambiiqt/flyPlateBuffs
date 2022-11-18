@@ -970,8 +970,8 @@ local function Nameplate_Added(...)
 		local stack = 0
 		local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
 		if unitType == "Creature" or unitType == "Vehicle" then scale = 1.3 elseif unitType =="Pet" then scale = 1.1 end
-		local durationSize = 0
-		local stackSize = 0
+		local durationSize = 10
+		local stackSize = 10
 		local id = 1 --Need to figure this out
 		local upTime = tonumber((GetServerTime() % 2^23) - (spawnTime % 2^23))
 		--print(nameCreature.." "..unitType..":"..ID.." alive for: "..((GetServerTime() % 2^23) - (spawnTime % 2^23)))
