@@ -649,7 +649,7 @@ local function UpdateBuffIcon(self, buff)
 		if db.durationPosition == 1 or db.durationPosition == 3 then
 			self.durationtext:SetFont(fPB.font, (self.durationSize or db.durationSize), "NORMAL")
 			self.durationBg:Show()
-		else
+		elseif (self.durationSize and self.durationSize >= 1) or (db.durationSize and db.durationSize >= 1) then
 			self.durationtext:SetFont(fPB.font, (self.durationSize or db.durationSize), "OUTLINE")
 		end
 		self.durationtext:Show()
