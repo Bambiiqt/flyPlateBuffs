@@ -94,6 +94,8 @@ local DefaultSettings = {
 		stackSize = 10,
 		stackColor = {1.0,1.0,1.0},
 		stackScale = true,
+		stackOverride = false,
+		stackSpecific = false,
 
 		blinkTimeleft = 0.2,
 
@@ -589,7 +591,7 @@ local function GetTexCoordFromSize(frame,size,size2)
 	end
 end
 
-local function UpdateBuffIcon(self)
+local function UpdateBuffIcon(self, buff)
 
 	self:SetAlpha(1)
 	self.stacktext:Hide()
@@ -653,39 +655,27 @@ local function UpdateBuffIcon(self)
 		self.durationtext:Show()
 	end
 
-	self.stacktext:ClearAllPoints()
-	local FONT
-	if db.stackPosition == 1 then FONT = "NORMAL" elseif db.stackPosition == 2 or db.stackPosition == 3 then FONT = "OUTLINE" end
 	if self.stack > 1 and type(tostring(self.stack)) == "string" then
 		local text = tostring(self.stack)
-		if db.stackOverride then
-			self.stacktext:SetFont(fPB.stackFont, (db.stackSize), FONT)
+		if db.stackSpecific and (self.stackSize and self.stackSize > 1) then
+			self.stacktext:SetFont(fPB.stackFont, (self.stackSize), "OUTLINE")
+			self.stacktext:SetText(text)
+		elseif db.stackOverride then
+			self.stacktext:SetFont(fPB.stackFont, (db.stackSize), "OUTLINE")
 			self.stacktext:SetText(text)
 		elseif db.stackScale then
-			self.stacktext:SetFont(fPB.stackFont, (self:GetHeight()/2), FONT)
-			self.stacktext:SetText(text)
-		elseif not db.stackOverride and (self.stackSize and self.stackSize > 1) then
-			self.stacktext:SetFont(fPB.stackFont, (self.stackSize), FONT)
+			self.stacktext:SetFont(fPB.stackFont, (db.stackSize*self.scale), "OUTLINE")
 			self.stacktext:SetText(text)
 		else
-			self.stacktext:SetFont(fPB.stackFont, (self:GetHeight()/2), FONT)
+			self.stacktext:SetFont(fPB.stackFont, (db.stackSize), "OUTLINE")
 			self.stacktext:SetText(text)
 		end
-		if db.stackPosition == 1 then
-			-- on icon
-			self.stacktext:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", db.stackSizeX*self.scale, db.stackSizeY*self.scale)
-		elseif db.stackPosition == 2 then
-			-- under icon
-			self.stacktext:SetPoint("TOP", self, "BOTTOM", db.stackSizeX*self.scale, db.stackSizeY*self.scale)
-		else
-			-- above icon
-			self.stacktext:SetPoint("BOTTOM", self, "TOP", db.stackSizeX*self.scale, db.stackSizeY*self.scale)  --CHRIS
-		end
+
 		self.stacktext:Show()
 	end
 end
 
-local function UpdateBuffIconOptions(self)
+local function UpdateBuffIconOptions(self, buff)
 	self.texture:SetAllPoints(self)
 
 	self.border:SetAllPoints(self)
@@ -729,6 +719,17 @@ local function UpdateBuffIconOptions(self)
 	end
 
 	self.stacktext:SetTextColor(db.stackColor[1],db.stackColor[2],db.stackColor[3],1)
+	self.stacktext:ClearAllPoints()
+	if db.stackPosition == 1 then
+		-- on icon
+		self.stacktext:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", db.stackSizeX*buff.scale, db.stackSizeY*buff.scale)
+	elseif db.stackPosition == 2 then
+		-- under icon
+		self.stacktext:SetPoint("TOP", self, "BOTTOM", db.stackSizeX*buff.scale, db.stackSizeY*buff.scale)
+	else
+		-- above icon
+		self.stacktext:SetPoint("BOTTOM", self, "TOP", db.stackSizeX*buff.scale, db.stackSizeY*buff.scale)
+	end
 
 end
 
@@ -744,6 +745,7 @@ local function CreateBuffIcon(frame,i)
 	frame.fPBiconsFrame.iconsFrame[i] = CreateFrame("Button")
 	frame.fPBiconsFrame.iconsFrame[i]:SetParent(frame.fPBiconsFrame)
 	local buffIcon = frame.fPBiconsFrame.iconsFrame[i]
+	local buff = PlatesBuffs[frame][i]
 
 	buffIcon.texture = buffIcon:CreateTexture(nil, "BACKGROUND")
 
@@ -760,7 +762,7 @@ local function CreateBuffIcon(frame,i)
 
 	buffIcon.stacktext = buffIcon:CreateFontString(nil, "ARTWORK")
 
-	UpdateBuffIconOptions(buffIcon)
+	UpdateBuffIconOptions(buffIcon, buff)
 
 	buffIcon.stacktext:Hide()
 	buffIcon.border:Hide()
@@ -883,9 +885,9 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 		buffIcon.scale = buff.scale
 
 		if updateOptions then
-			UpdateBuffIconOptions(buffIcon)
+			UpdateBuffIconOptions(buffIcon, buff)
 		end
-		UpdateBuffIcon(buffIcon)
+		UpdateBuffIcon(buffIcon, buff)
 
 		-----------------------------------------------------------------------------------------
 		--Glow
@@ -1657,8 +1659,8 @@ function fPB:CLEU()
 				local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
 				local expiration = GetTime() + duration
 				local scale = 1.3
-				local durationSize = 0
-				local stackSize = 0
+				local durationSize = 10
+				local stackSize = 10
 				local id = 1 --Need to figure this out
 				if not Interrupted[sourceGUID] then
 					Interrupted[sourceGUID] = {}

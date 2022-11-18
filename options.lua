@@ -866,13 +866,21 @@ fPB.MainOptionTable = {
 					order = 19.8,
 					type = "toggle",
 					name = L["One Stack Size"],
-					desc = L["Use the same Stack size for all icon sizes over scaling with Icon or custom spell stack sizes"],
+					desc = L["Use the same stack font size for all icon sizes over scaling with Icon sizes or custom spell stack font size"],
+					disabled = function() return db.stackSpecific end,
 				},
 				stackScale = {
 					order = 19.9,
 					type = "toggle",
 					name = L["Scale Stack Size"],
-					desc = L["Scales the Stack with the Icon on all Icons"],
+					desc = L["Scales default stack font size with the scale of the Icon on all Icons"],
+					disabled = function() return db.stackSpecific end,
+				},
+				stackSpecific = {
+					order = 19.95,
+					type = "toggle",
+					name = L["Spell Specific Stack Size"],
+					desc = L["Uses the Specific Spells stack font size options for Icons and if spell is not added will use the default font stack size above"],
 				},
 				headerOther = {
 					order = 20,
