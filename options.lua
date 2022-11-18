@@ -865,8 +865,14 @@ fPB.MainOptionTable = {
 				stackOverride = {
 					order = 19.8,
 					type = "toggle",
-					name = L["Override Icon Stack Size"],
-					desc = L["Also will stack size for all icon sizes over scaling with Icon"],
+					name = L["One Stack Size"],
+					desc = L["Use the same Stack size for all icon sizes over scaling with Icon or custom spell stack sizes"],
+				},
+				stackScale = {
+					order = 19.9,
+					type = "toggle",
+					name = L["Scale Stack Size"],
+					desc = L["Scales the Stack with the Icon on all Icons"],
 				},
 				headerOther = {
 					order = 20,
