@@ -915,8 +915,8 @@ fPB.MainOptionTable = {
 				showStdSwipe = {
 					order = 23,
 					type = "toggle",
-					name = L["Show 'clock' animation"],
-					desc = L["Also will show duration if OmniCC installed, regardless of the previous option"],
+					name = L["Show DrawSwipe"],
+					desc = L["Show the DrawSwipe on Icons"],
 				},
 				headerBorder = {
 					order = 24,

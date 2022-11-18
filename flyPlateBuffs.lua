@@ -93,6 +93,8 @@ local DefaultSettings = {
 		stackFont = "Friz Quadrata TT",
 		stackSize = 10,
 		stackColor = {1.0,1.0,1.0},
+		stackSizeX = 0,
+		stackSizeY = 0,
 		stackScale = true,
 		stackOverride = false,
 		stackSpecific = false,
@@ -694,8 +696,11 @@ local function UpdateBuffIconOptions(self, buff)
 	end
 	if db.showStdCooldown then
 		self.cooldown:SetHideCountdownNumbers(false)
+		self.cooldown:SetScript("OnUpdate", nil)
+		if self.cooldown._occ_display then self.cooldown._occ_display:Show() end
 	else
-		self.cooldown:SetHideCountdownNumbers(true)
+		self.cooldown:SetHideCountdownNumbers(true) --Hides Blizzard
+		self.cooldown:SetScript("OnUpdate", function() if self.cooldown._occ_display then self.cooldown._occ_display:Hide() self.cooldown._occ_display = nil end end) --Hides OmniCC
 	end
 
 	if db.showDuration then
@@ -741,7 +746,7 @@ local function iconOnHide(self)
 	self.durationBg:Hide()
 end
 
-local function CreateBuffIcon(frame,i)
+local function CreateBuffIcon(frame,i,nameplateID)
 	frame.fPBiconsFrame.iconsFrame[i] = CreateFrame("Button")
 	frame.fPBiconsFrame.iconsFrame[i]:SetParent(frame.fPBiconsFrame)
 	local buffIcon = frame.fPBiconsFrame.iconsFrame[i]
@@ -751,7 +756,7 @@ local function CreateBuffIcon(frame,i)
 
 	buffIcon.border = buffIcon:CreateTexture(nil,"BORDER")
 
-	buffIcon.cooldown = CreateFrame("Cooldown", nil, buffIcon, "CooldownFrameTemplate")
+	buffIcon.cooldown = CreateFrame("Cooldown", "fPBCooldown"..nameplateID..i, buffIcon, "CooldownFrameTemplate")
 	buffIcon.cooldown:SetReverse(true)
 	buffIcon.cooldown:SetDrawEdge(false)
 
@@ -864,7 +869,7 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 
  	for i = 1, #PlatesBuffs[frame] do
 		if not frame.fPBiconsFrame.iconsFrame[i] then
-			CreateBuffIcon(frame,i)
+			CreateBuffIcon(frame,i,nameplateID)
 		end
 
 		local buff = PlatesBuffs[frame][i]
