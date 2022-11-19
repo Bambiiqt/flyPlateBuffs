@@ -699,8 +699,8 @@ fPB.MainOptionTable = {
 				showDuration = {
 					order = 6,
 					type = "toggle",
-					name = L["Show Duration"],
-					desc = L["Show remaining duration"],
+					name = L["Show fPB Duration"],
+					desc = L["Show remaining duration, this duration is seperate from OmniCC and Blizzards Countdown"],
 				},
 				showDecimals = {
 					order = 7,
@@ -890,13 +890,14 @@ fPB.MainOptionTable = {
 				showStdCooldown = {
 					order = 21,
 					type = "toggle",
-					name = L["Duration on icon"],
-					desc = L["Support standart blizzard or OmniCC"],
+					name = L["Enable OmniCC"],
+					desc = L["If loaded Blizzard Count is not avialable but you can customize the look in OmniCC using fPB as the pattern for the elemnet UI to anything you like with OmniCC"],
+					disabled = function() return not IsAddOnLoaded("OmniCC") end
 				},
 				blizzardCountdown = {
 					order =22,
 					type = "toggle",
-					name = L["Enable blizzard Countdown"],
+					name = L["Enable Blizzard Countdown"],
 					desc = L["Changes CVar \"countdownForCooldowns\""],
 					width = "double",
 					get = function(info)
@@ -911,12 +912,13 @@ fPB.MainOptionTable = {
 							SetCVar("countdownForCooldowns", 0)
 						end
 					end,
+					disabled = function() return IsAddOnLoaded("OmniCC") end
 				},
 				showStdSwipe = {
 					order = 23,
 					type = "toggle",
 					name = L["Show DrawSwipe"],
-					desc = L["Show the DrawSwipe on Icons"],
+					desc = L["Show the DrawSwipe on Icons, if using OmniCC this can be customized further, if it is not showing this most likely menas you have it disabled in OmniCC"],
 				},
 				headerBorder = {
 					order = 24,

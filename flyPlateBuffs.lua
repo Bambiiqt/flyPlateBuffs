@@ -640,7 +640,7 @@ local function UpdateBuffIcon(self, buff)
 		self.border:Show()
 	end
 
-	if (db.showStdCooldown or db.showStdSwipe) and self.expiration > 0 then
+	if (db.showStdCooldown or db.showStdSwipe or db.blizzardCountdown) and self.expiration > 0 then
 		local start, duration = self.cooldown:GetCooldownTimes()
 		if (start ~= (self.expiration - self.duration)) or duration ~= self.durationthen then
 			self.cooldown:SetCooldown(self.expiration - self.duration, self.duration)
@@ -694,13 +694,20 @@ local function UpdateBuffIconOptions(self, buff)
 	else
 		self.cooldown:SetDrawSwipe(false)
 	end
-	if db.showStdCooldown then
-		self.cooldown:SetHideCountdownNumbers(false)
+
+	if db.showStdCooldown and IsAddOnLoaded("OmniCC") then
 		self.cooldown:SetScript("OnUpdate", nil)
 		if self.cooldown._occ_display then self.cooldown._occ_display:Show() end
+	elseif IsAddOnLoaded("OmniCC") then
+		self.cooldown:SetScript("OnUpdate", function() if self.cooldown._occ_display and self.cooldown._occ_display:IsShown() then self.cooldown._occ_display:Hide() end end) --Hides OmniCC
+	end
+
+	if db.blizzardCountdown and not IsAddOnLoaded("OmniCC") then
+		self.cooldown:SetHideCountdownNumbers(false)
+	elseif IsAddOnLoaded("OmniCC") then
+		self.cooldown:SetHideCountdownNumbers(true)
 	else
 		self.cooldown:SetHideCountdownNumbers(true) --Hides Blizzard
-		self.cooldown:SetScript("OnUpdate", function() if self.cooldown._occ_display then self.cooldown._occ_display:Hide() self.cooldown._occ_display = nil end end) --Hides OmniCC
 	end
 
 	if db.showDuration then
