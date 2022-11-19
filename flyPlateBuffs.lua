@@ -295,14 +295,13 @@ local function AddBuff(frame, type, icon, stack, debufftype, duration, expiratio
 		debufftype = debufftype,
 		duration = duration,
 		expiration = expiration,
-		scale = (my and db.myScale + 1 or 1) * (scale or 1),
+		scale = (my and tonumber(db.myScale) + 1 or 1) * (tonumber(scale) or 1),
 		durationSize = durationSize,
 		stackSize = stackSize,
 		id = id,
 		EnemySmokeBomb = EnemySmokeBomb,
 		spellId = spellId,
 	}
-
 end
 
 local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, duration, expiration, caster, spellId, id)
