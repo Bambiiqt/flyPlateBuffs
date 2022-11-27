@@ -593,7 +593,7 @@ local function GetTexCoordFromSize(frame,size,size2)
 end
 
 local function UpdateBuffIcon(self, buff)
-
+	self:EnableMouse(false)
 	self:SetAlpha(1)
 	self.stacktext:Hide()
 	self.border:Hide()
@@ -970,6 +970,13 @@ local function Nameplate_Added(...)
 	local nameplateID = ...
 	local frame = C_NamePlate_GetNamePlateForUnit(nameplateID)
 	local guid = UnitGUID(nameplateID)
+
+	--disable blizzard Auras on nameplates
+	local Blizzardframe = frame.UnitFrame
+	if not frame or Blizzardframe:IsForbidden() then return end
+	Blizzardframe.BuffFrame:ClearAllPoints()
+	Blizzardframe.BuffFrame:SetAlpha(0)
+
 	local unitType, _, _, _, _, ID, spawnUID = strsplit("-", guid)
 	if unitType == "Creature" or unitType == "Vehicle" or unitType == "Pet" then --and UnitIsEnemy("player" , nameplateID) then --or unitType == "Pet"  then
 		local spawnEpoch = GetServerTime() - (GetServerTime() % 2^23)
@@ -1011,7 +1018,7 @@ local function Nameplate_Added(...)
 				if (duration - upTime) < 0 then --Permanent
 					expiration = GetTime() + 1;	duration = 0
 				end
-				print(nameCreature.." "..unitType..":"..ID.." alive for: "..upTime)
+				--print(nameCreature.." "..unitType..":"..ID.." alive for: "..upTime)
 				local tablespot = #Interrupted[guid] + 1
 				tblinsert (Interrupted[guid], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, ["ID"] = ID})
 				if duration - (GetServerTime() - spawnTime) > 0 then
@@ -1032,8 +1039,9 @@ local function Nameplate_Added(...)
 				end
 			end
 		end
-		UpdateUnitAuras(nameplateID)
-	end
+	UpdateUnitAuras(nameplateID)
+end
+
 local function Nameplate_Removed(...)
 	local nameplateID = ...
 	local frame = C_NamePlate_GetNamePlateForUnit(nameplateID)
@@ -1060,6 +1068,7 @@ local function FixSpells()
 		end
 	end
 end
+
 function fPB.CacheSpells() -- spells filtered by names, not checking id
 	cachedSpells = {}
 	for spell,s in pairs(db.Spells) do
@@ -1615,7 +1624,7 @@ function fPB:CLEU()
 				or(listedSpell.show == 2 and my)
 				or(listedSpell.show == 4 and isAlly)
 				or(listedSpell.show == 5 and not isAlly) then
-					print(sourceName.." Summoned "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
+					--print(sourceName.." Summoned "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
 					local tablespot = #Interrupted[sourceGUID] + 1
 					tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemySmokeBomb = EnemySmokeBomb, sourceGUID = sourceGUID,  ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
 					UpdateAllNameplates()
@@ -1624,7 +1633,7 @@ function fPB:CLEU()
 						if Interrupted[sourceGUID] then
 							for k, v in pairs(Interrupted[sourceGUID]) do
 								if v.spellId == spellId then
-									print(v.sourceName.." Timed Out "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Timer")
+									--print(v.sourceName.." Timed Out "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Timer")
 									Interrupted[sourceGUID][k] = nil
 									UpdateAllNameplates()
 								end
@@ -1640,7 +1649,7 @@ function fPB:CLEU()
 								if v.destGUID then
 	                if substring(v.destGUID, -5) == substring(guid, -5) then --string.sub is to help witj Mirror Images bug
 	                  if ObjectExists(v.destGUID, ticker, v.namePrint, v.sourceName) then
-		                  print(v.sourceName.." "..ObjectExists(v.destGUID, ticker, v.namePrint, v.sourceName).." "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Ticker")
+		                  --print(v.sourceName.." "..ObjectExists(v.destGUID, ticker, v.namePrint, v.sourceName).." "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Ticker")
 	                		Interrupted[sourceGUID][k] = nil
 											UpdateAllNameplates()
 	                    self.ticker:Cancel()
@@ -1665,7 +1674,7 @@ function fPB:CLEU()
 				local duration = castedAuraIds[spellId]
 				local type = "HARMFUL"
 				local namePrint, _, icon = GetSpellInfo(spellId)
-				print(sourceName.." Casted "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
+				--print(sourceName.." Casted "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
 				local stack = 0
 				local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
 				local expiration = GetTime() + duration
@@ -1683,7 +1692,7 @@ function fPB:CLEU()
 					if Interrupted[sourceGUID] then
 						for k, v in pairs(Interrupted[sourceGUID]) do
 							if v.spellId == spellId then
-								print(v.sourceName.." Timed Out "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Timer")
+								--print(v.sourceName.." Timed Out "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Timer")
 								Interrupted[sourceGUID][k] = nil
 								UpdateAllNameplates()
 							end
@@ -1730,13 +1739,13 @@ function fPB:CLEU()
 						local sourceGUID_Kick = true
 						for k, v in pairs(Interrupted[destGUID]) do
 							if v.icon == icon and v.sourceGUID == sourceGUID and ((expiration - v.expiration) < 1) then
-								print("Regular Kick Spell Exists, kick used within: "..(expiration - v.expiration))
+								--print("Regular Kick Spell Exists, kick used within: "..(expiration - v.expiration))
 								sourceGUID_Kick = nil -- the source already used his kick within a GCD on this destGUID
 								break
 							end
 						end
 						if sourceGUID_Kick then
-							print(sourceName.." kicked "..(select(1, UnitChannelInfo(unit))).." channel cast w/ "..name.. " from "..destName)
+							--print(sourceName.." kicked "..(select(1, UnitChannelInfo(unit))).." channel cast w/ "..name.. " from "..destName)
 							tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID, ["spellSchool"] = spellSchool})
 							UpdateAllNameplates()
 							Ctimer(interruptsIds[spellId], function()
@@ -1787,13 +1796,13 @@ function fPB:CLEU()
 					local sourceGUID_Kick = true
 					for k, v in pairs(Interrupted[destGUID]) do
 						if v.icon == icon and v.sourceGUID == sourceGUID and ((expiration - v.expiration) < 1) then
-							print("Casted Kick Fired but Did Not Execute within: "..(expiration - v.expiration).." of Channel Kick Firing")
+							--print("Casted Kick Fired but Did Not Execute within: "..(expiration - v.expiration).." of Channel Kick Firing")
 							sourceGUID_Kick = nil -- the source already used his kick within a GCD on this destGUID
 							break
 						end
 					end
 					if sourceGUID_Kick then
-						print(sourceName.." kicked cast w/ "..name.. " from "..destName)
+						--print(sourceName.." kicked cast w/ "..name.. " from "..destName)
 						tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID, ["spellSchool"] = spellSchool})
 						UpdateAllNameplates()
 						Ctimer(interruptsIds[spellId], function()
