@@ -286,7 +286,7 @@ local function DrawOnPlate(frame)
 	end
 end
 
-local function AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, scale, durationSize, stackSize, EnemySmokeBomb, spellId)
+local function AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, scale, durationSize, stackSize, EnemyBuff, spellId)
 	if not PlatesBuffs[frame] then PlatesBuffs[frame] = {} end
 	PlatesBuffs[frame][#PlatesBuffs[frame] + 1] = {
 		type = type,
@@ -299,7 +299,7 @@ local function AddBuff(frame, type, icon, stack, debufftype, duration, expiratio
 		durationSize = durationSize,
 		stackSize = stackSize,
 		id = id,
-		EnemySmokeBomb = EnemySmokeBomb,
+		EnemyBuff = EnemyBuff,
 		spellId = spellId,
 	}
 end
@@ -312,6 +312,7 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 	local listedSpell
 	local my = caster == "player"
 	local cachedID = cachedSpells[name]
+	local EnemyBuff
 
 	if spellId == 325216 then --Hide Bonedust Brew Debuff
 		if type == "HARMFUL" and not my then return end
@@ -332,6 +333,11 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		end
 	end
 
+	if listedSpell and listedSpell.RedifEnemy and caster and UnitIsEnemy("player", caster) then --still returns true for an enemy currently under mindcontrol I can add your fix.
+		EnemyBuff = true
+	else
+		EnemyBuff = nil
+	end
 	-----------------------------------------------------------------------------------------------------------------
 	--Icon Changes
 	-----------------------------------------------------------------------------------------------------------------
@@ -439,20 +445,10 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 	-----------------------------------------------------------------------------------------------------------------
 	--SmokeBomb Check For Arena
 	-----------------------------------------------------------------------------------------------------------------
-	local EnemySmokeBomb
 	if spellId == 212183 then -- Smoke Bomb
 		if caster and SmokeBombAuras[UnitGUID(caster)] then
-			if UnitIsEnemy("player", caster) then --still returns true for an enemy currently under mindcontrol I can add your fix.
-				duration = SmokeBombAuras[UnitGUID(caster)].duration --Add a check, i rogue bombs in stealth there is a source but the cleu doesnt regester a time
-				expiration = SmokeBombAuras[UnitGUID(caster)].expiration
-				EnemySmokeBomb = true
-			elseif not UnitIsEnemy("player", caster) then --Add a check, i rogue bombs in stealth there is a source but the cleu doesnt regester a time
-				duration = SmokeBombAuras[UnitGUID(caster)].duration --Add a check, i rogue bombs in stealth there is a source but the cleu doesnt regester a time
-				expiration = SmokeBombAuras[UnitGUID(caster)].expiration
-				EnemySmokeBomb = false
-			else
-				EnemySmokeBomb = false
-			end
+			duration = SmokeBombAuras[UnitGUID(caster)].duration --Add a check, i rogue bombs in stealth there is a source but the cleu doesnt regester a time
+			expiration = SmokeBombAuras[UnitGUID(caster)].expiration
 		end
 	end
 
@@ -499,7 +495,7 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		or(listedSpell.show == 2 and my)
 		or(listedSpell.show == 4 and isAlly)
 		or(listedSpell.show == 5 and not isAlly)) and not listedSpell.spellDisableAura then
-			AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, listedSpell.scale, listedSpell.durationSize, listedSpell.stackSize, EnemySmokeBomb, spellId )
+			AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, listedSpell.scale, listedSpell.durationSize, listedSpell.stackSize, EnemyBuff, spellId )
 			return
 		end
 	end
@@ -615,7 +611,7 @@ local function UpdateBuffIcon(self, buff)
 	----Destaurate Icon if RedifEnemy
 	-----------------------------------------------------------------------------------------------------------------
 
-	if self.EnemySmokeBomb then
+	if self.EnemyBuff then
 		self.texture:SetDesaturated(1) --Destaurate Icon
 		self.texture:SetVertexColor(1, .25, 0);
 	else
@@ -891,7 +887,7 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 		buffIcon.stackSize = buff.stackSize
 		buffIcon.width = db.baseWidth * buff.scale
 		buffIcon.height = db.baseHeight * buff.scale
-		buffIcon.EnemySmokeBomb = buff.EnemySmokeBomb
+		buffIcon.EnemyBuff = buff.EnemyBuff
 		buffIcon.spellId = buff.spellId
 		buffIcon.scale = buff.scale
 
@@ -1601,8 +1597,8 @@ function fPB:CLEU()
 				local duration = listedSpell.durationCLEU or 1
 				local type = "HELPFUL"
 				local namePrint, _, icon = GetSpellInfo(spellId)
-				local EnemySmokeBomb
-				if listedSpell.RedifEnemy and not isAlly then EnemySmokeBomb = true end
+				local EnemyBuff
+				if listedSpell.RedifEnemy and not isAlly then EnemyBuff = true end
 				if spellId == 321686 then --Mirror Image Icon Change
 					icon = 135994
 				end
@@ -1626,7 +1622,7 @@ function fPB:CLEU()
 				or(listedSpell.show == 5 and not isAlly) then
 					--print(sourceName.." Summoned "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
 					local tablespot = #Interrupted[sourceGUID] + 1
-					tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemySmokeBomb = EnemySmokeBomb, sourceGUID = sourceGUID,  ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
+					tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemyBuff = EnemyBuff, sourceGUID = sourceGUID,  ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
 					UpdateAllNameplates()
 					local ticker = 1
 					Ctimer(duration, function()

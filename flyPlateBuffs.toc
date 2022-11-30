@@ -1,8 +1,8 @@
-## Interface: 80000
-## Title: flyPlateBuffs
-## Version: 8.0.1.06
+## Interface: 100000
+## Title: flyerPlateBuffs
+## Version: 10.0.0.0
 ## Notes: Shows buffs/debuffs on nameplates
-## Author: FlyNeko
+## Author: FlyNeko / Bambiqt
 ## SavedVariables: flyPlateBuffsDB
 
 libs\LibStub\LibStub.lua
