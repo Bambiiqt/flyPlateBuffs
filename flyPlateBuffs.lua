@@ -286,7 +286,7 @@ local function DrawOnPlate(frame)
 	end
 end
 
-local function AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, scale, durationSize, stackSize, EnemyBuff, spellId)
+local function AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, spellId, EnemyBuff, scale, durationSize, stackSize)
 	if not PlatesBuffs[frame] then PlatesBuffs[frame] = {} end
 	PlatesBuffs[frame][#PlatesBuffs[frame] + 1] = {
 		type = type,
@@ -481,7 +481,7 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		end
 		if (type == "HARMFUL" and (db.showDebuffs == 1 or ((db.showDebuffs == 2 or db.showDebuffs == 4) and my)))
 		or (type == "HELPFUL"   and (db.showBuffs   == 1 or ((db.showBuffs   == 2 or db.showBuffs   == 4) and my))) then
-			AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, _, _, _, _, spellId)
+			AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, spellId, EnemyBuff, nil, nil, nil)
 			return
 		else
 			return
@@ -495,7 +495,7 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		or(listedSpell.show == 2 and my)
 		or(listedSpell.show == 4 and isAlly)
 		or(listedSpell.show == 5 and not isAlly)) and not listedSpell.spellDisableAura then
-			AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, listedSpell.scale, listedSpell.durationSize, listedSpell.stackSize, EnemyBuff, spellId )
+			AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, spellId, EnemyBuff, listedSpell.scale, listedSpell.durationSize, listedSpell.stackSize)
 			return
 		end
 	end
