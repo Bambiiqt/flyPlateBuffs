@@ -803,8 +803,6 @@ local function CreateBuffIcon(frame,i,nameplateID)
 end
 
 local function UpdateUnitAuras(nameplateID,updateOptions)
-	--local number = string.match(nameplateID, "%d+")
-	--local TPAnchor = _G["ThreatPlatesFrameNamePlate"..number]
 
 	local frame = C_NamePlate_GetNamePlateForUnit(nameplateID)
 	if frame then
@@ -861,12 +859,13 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 			parent = frame.TPFrame -- for ThreatPlates
 		end
 		if not parent then
-			parent = frame.unitFrame -- for ThreatPlates
+			parent = frame.unitFrame -- for Plater
 		end
 		if not parent then
 			parent = frame
 		end
-		anchor = "ThreatPlatesFrame"..nameplateID
+		anchor = "ThreatPlatesFrame"..nameplateID -- for ThreatPlates
+		anchor = nameplateID.."PlaterUnitFrame" -- for Plater
 		frame.fPBiconsFrame:SetParent(parent)
 	end
 	if not frame.fPBiconsFrame.iconsFrame then
