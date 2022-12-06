@@ -809,7 +809,9 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 	local frame = C_NamePlate_GetNamePlateForUnit(nameplateID)
 	if frame then
 		frame.TPFrame  = _G["ThreatPlatesFrame" .. frame:GetName()]
+		frame.unitFrame   = _G[frame:GetName().."PlaterUnitFrame"]
 		if frame.TPFrame then frame = frame.TPFrame end
+		if frame.unitFrame then frame = frame.unitFrame end
 	end
 
 	if not frame then return end 	-- modifying friendly nameplates is restricted in instances since 7.2
@@ -857,6 +859,9 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 		local parent = db.parentWorldFrame and WorldFrame
 		if not parent then
 			parent = frame.TPFrame -- for ThreatPlates
+		end
+		if not parent then
+			parent = frame.unitFrame -- for ThreatPlates
 		end
 		if not parent then
 			parent = frame
