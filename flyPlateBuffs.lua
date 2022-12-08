@@ -940,7 +940,7 @@ local creatureId = {
 	[510] = {45, 135862}, --Water Elemental
 	[19668] = {15, 136199}, --Shadowfiend
 	[1964] = {30, 132129}, --Treant
-	[31216] = {30, 135994}, --Mirrorr Image
+	[31216] = {40, 135994}, --Mirrorr Image
 	["Infernal"] = {60, 136219}, --Infernal
 
 --Pets--
@@ -950,6 +950,8 @@ local creatureId = {
 	[417] = {0, 136217}, --Fel hunter
 	[416] = {0, 136218}, --Imp
 	[1860] = {0, 136221}, --Voidwalker
+	[58965] = {0, 136216}, --Grimoire: Felguard
+	[12752] = {0, 136216}, --Grimoire: Felguard
 
 }
 
@@ -981,7 +983,7 @@ local function Nameplate_Added(...)
 	if unitType == "Creature" or unitType == "Vehicle" or unitType == "Pet" then --and UnitIsEnemy("player" , nameplateID) then --or unitType == "Pet"  then
 		local spawnEpoch = GetServerTime() - (GetServerTime() % 2^23)
 		local spawnEpochOffset = bit_band(tonumber(substring(spawnUID, 5), 16), 0x7fffff)
-		spawnTime = spawnEpoch + spawnEpochOffset
+		local spawnTime = spawnEpoch + spawnEpochOffset
 		local nameCreature = UnitName(nameplateID)
 		local type = "HARMFUL"
 		local duration, expiration, icon, scale, tracked, seen
@@ -1015,13 +1017,13 @@ local function Nameplate_Added(...)
 				end
 			end
 			if not seen then
-				if (duration - upTime) < 0 then --Permanent
-					expiration = GetTime() + 1;	duration = 0
+				if duration == 0 then --Permanent
+					expiration = 0;	duration = 0
 				end
 				--print(nameCreature.." "..unitType..":"..ID.." alive for: "..upTime)
 				local tablespot = #Interrupted[guid] + 1
-				tblinsert (Interrupted[guid], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, ["ID"] = ID})
-				if duration - (GetServerTime() - spawnTime) > 0 then
+				tblinsert (Interrupted[guid], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, ["ID"] = ID})
+				if duration ~= 0 and duration - (GetServerTime() - spawnTime) > 0 then
 					Ctimer(duration - (GetServerTime() - spawnTime) , function()
 						if Interrupted[guid] then
 							Interrupted[guid][tablespot] = nil
@@ -1029,16 +1031,20 @@ local function Nameplate_Added(...)
 						end
 					end)
 				else
-						Ctimer(500 , function()
+					frame.fPBtimer = C_Timer.NewTicker(1, function()
+						local unitToken = UnitTokenFromGUID(guid)
+						if not unitToken then
 							if Interrupted[guid] then
 								Interrupted[guid][tablespot] = nil
 								UpdateAllNameplates()
 							end
-						end)
-					end
+							frame.fPBtimer:Cancel()
+						end
+					end)
 				end
 			end
 		end
+	end
 	UpdateUnitAuras(nameplateID)
 end
 
