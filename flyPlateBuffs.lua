@@ -363,6 +363,10 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		icon = 537021
 	end
 
+	if spellId == 285515 then --Frost Shock to Frost Nove
+		icon = 135848
+	end
+
 	if spellId == 317929 then --Aura Mastery Cast Immune Pally
 		icon = 135863
 	end
