@@ -304,7 +304,7 @@ local function AddBuff(frame, type, icon, stack, debufftype, duration, expiratio
 	}
 end
 
-local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, duration, expiration, caster, spellId, id)
+local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, duration, expiration, caster, spellId, id, nameplateID)
 	if type == "HARMFUL" and db.showDebuffs == 5 then return end
 	if type == "HELPFUL" and db.showBuffs == 5 then return end
 
@@ -383,6 +383,81 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		icon = 135890
 	end
 
+	if spellId == 334275 then --Amplify Curse's Exhaustion
+		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
+		TooltipUtil.SurfaceArgs(tooltipData)
+
+		for _, line in ipairs(tooltipData.lines) do
+			TooltipUtil.SurfaceArgs(line)
+		end
+		--print("Unit Aura: ", tooltipData.lines[1].leftText)
+		--print("Aura Info: ", tooltipData.lines[2].leftText)
+		if strfind(tooltipData.lines[2].leftText, "70") then
+			stack = 70
+		else
+			
+		end
+	end
+	if spellId == 1714  then --Amplify Curse's Tongues
+		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
+		TooltipUtil.SurfaceArgs(tooltipData)
+
+		for _, line in ipairs(tooltipData.lines) do
+			TooltipUtil.SurfaceArgs(line)
+		end
+		--print("Unit Aura: ", tooltipData.lines[1].leftText)
+		--print("Aura Info: ", tooltipData.lines[2].leftText)
+		if not strfind(tooltipData.lines[2].leftText, "10") then
+			stack = 20
+		else
+			
+		end
+	end
+	if spellId == 702 then --Amplify Curse's Weakness
+		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
+		TooltipUtil.SurfaceArgs(tooltipData)
+
+		for _, line in ipairs(tooltipData.lines) do
+			TooltipUtil.SurfaceArgs(line)
+		end
+		--print("Unit Aura: ", tooltipData.lines[1].leftText)
+		--print("Aura Info: ", tooltipData.lines[2].leftText)
+		if strfind(tooltipData.lines[2].leftText, "100") then
+			stack = 100
+		else
+			
+		end
+	end
+
+	if spellId == 319504 then --Finds Hemotoxin for Shiv
+		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
+		TooltipUtil.SurfaceArgs(tooltipData)
+
+		for _, line in ipairs(tooltipData.lines) do
+			TooltipUtil.SurfaceArgs(line)
+		end
+	   --print("Unit Aura: ", tooltipData.lines[1].leftText)
+	   --print("Aura Info: ", tooltipData.lines[2].leftText)
+		if strfind(tooltipData.lines[2].leftText, "35") then
+			icon = 3610996
+		else
+			return 
+		end
+	end
+
+	if spellId == 363916 then --Obsidian Scales w/Mettles
+		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
+		TooltipUtil.SurfaceArgs(tooltipData)
+
+		for _, line in ipairs(tooltipData.lines) do
+			TooltipUtil.SurfaceArgs(line)
+		end
+	   --print("Unit Aura: ", tooltipData.lines[1].leftText)
+	   --print("Aura Info: ", tooltipData.lines[2].leftText)
+	    if strfind(tooltipData.lines[2].leftText, "Immune") then
+			icon = 1526594
+		end
+	end
 	-----------------------------------------------------------------------------------------------------------------
 	-- Earthen Totem (Totems Need a Spawn Time Check)
 	-----------------------------------------------------------------------------------------------------------------
@@ -514,14 +589,14 @@ local function ScanUnitBuffs(nameplateID, frame)
 	local id = 1
 	while UnitDebuff(nameplateID,id) do
 		local name, icon, stack, debufftype, duration, expiration, caster, _, _, spellId = UnitDebuff(nameplateID, id)
-		FilterBuffs(isAlly, frame, "HARMFUL", name, icon, stack, debufftype, duration, expiration, caster, spellId, id)
+		FilterBuffs(isAlly, frame, "HARMFUL", name, icon, stack, debufftype, duration, expiration, caster, spellId, id, nameplateID)
 		id = id + 1
 	end
 
 	id = 1
 	while UnitBuff(nameplateID,id) do
 		local name, icon, stack, debufftype, duration, expiration, caster, _, _, spellId = UnitBuff(nameplateID, id)
-		FilterBuffs(isAlly, frame, "HELPFUL", name, icon, stack, debufftype, duration, expiration, caster, spellId, id)
+		FilterBuffs(isAlly, frame, "HELPFUL", name, icon, stack, debufftype, duration, expiration, caster, spellId, id, nameplateID)
 		id = id + 1
 	end
 end
