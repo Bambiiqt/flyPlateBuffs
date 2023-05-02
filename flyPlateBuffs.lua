@@ -383,6 +383,10 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		icon = 135890
 	end
 
+	if spellId == 387636 then --Soulburn Healthstone
+		icon = 538745
+	end
+
 	if spellId == 334275 then --Amplify Curse's Exhaustion
 		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
 		TooltipUtil.SurfaceArgs(tooltipData)
@@ -515,11 +519,38 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 			--print("WarBanner Buff Check at: "..spawnTime)
 			end
 			if WarBanner[spawnTime] then
-			duration = WarBanner[spawnTime].duration
-			expiration = WarBanner[spawnTime].expiration
+				--print("Spawn: "..UnitName(caster))
+				duration = WarBanner[spawnTime].duration
+				expiration = WarBanner[spawnTime].expiration
+			elseif WarBanner[guid] then
+				--print("guid: "..UnitName(caster))
+				duration = WarBanner[guid].duration 
+				expiration = WarBanner[guid].expiration
+			elseif WarBanner[1] then
+				--print("1: "..UnitName(caster))
+				duration = WarBanner[1].duration
+				expiration = WarBanner[1].expiration
+			end
+		else
+			--print("WarBanner Nocaster")
+			duration = WarBanner[1].duration 
+			expiration = WarBanner[1].expiration
+		end
+	end
+
+	-----------------------------------------------------------------------------------------------------------------
+	--Two Buff conidtions like Root Beam
+	-----------------------------------------------------------------------------------------------------------------
+	if spellId == 12472 then
+		for i = 1, 40 do
+			local _, _, c, _, d, e, _, _, _, s = UnitAura(nameplateID, id, type)
+			if not s then break end
+			if s == 382148 then
+				count = c
 			end
 		end
 	end
+
 
 	-----------------------------------------------------------------------------------------------------------------
 	--SmokeBomb Check For Arena
@@ -1015,12 +1046,18 @@ local creatureId = {
 	[100820] = {15, 237577}, --Spirit Wolf
 	['Spirit Wolf'] = {15, 237577}, --Spirit Wolf
 
-	[27829] = {30 , 132182}, --Ebon Gargoyle
+	[27829] = {25 , 132182}, --Ebon Gargoyle
+	[149555] = {25 , 298667}, --Abomination
 	[510] = {45, 135862}, --Water Elemental
 	[19668] = {15, 136199}, --Shadowfiend
+	[62982] = {15, 136214}, --Minbender
 	[1964] = {30, 132129}, --Treant
 	[31216] = {40, 135994}, --Mirrorr Image
 	["Infernal"] = {60, 136219}, --Infernal
+	[196111] = {10, 236423}, --Pit Lord
+	[135002] = {15, 2065628}, --Demonic Tyrant
+	[179193] = {15, 1718002}, --Fel Obelisk
+	[101398] = {12, 537021}, --Psyfiend
 
 --Pets--
 	[26125] = {0, 237511}, --Raise Ghoul
@@ -1031,6 +1068,7 @@ local creatureId = {
 	[1860] = {0, 136221}, --Voidwalker
 	[58965] = {0, 136216}, --Grimoire: Felguard
 	[12752] = {0, 136216}, --Grimoire: Felguard
+	[17252] = {0, 136216}, --Grimoire: Felguard
 
 }
 
@@ -1410,7 +1448,6 @@ fPB.Events:SetScript("OnEvent", function(self, event, ...)
 	end
 end)
 
-
 local interruptsIds = {
 	[1766]   = 5,		-- Kick (Rogue)
 	[2139]   = 6,		-- Counterspell (Mage)
@@ -1434,16 +1471,85 @@ local interruptsIds = {
 	[347008] = 4,		-- Axe Toss(felguard) (Warlock)
 	[217824] = 4,		-- Shield of Virtue (Protec Paladin)
 	[231665] = 3,		-- Avengers Shield (Paladin)
-	[91807] =  2,   --Shambling Rush
+	[91807] =  2,  		-- Shambling Rush
+	[351338] = 4,		-- Quell (Evoker)
 
-	[11972] =  3,   --Shield Bash (testing Purposes in Northern barrens)
+	[11972] =  3,  		--Shield Bash (testing Purposes in Northern barrens)
 
 }
 
 local castedAuraIds = {
 	[202770] = 8, --Fury of Elune
+	[202359] = 6, --Astral Communion
 }
 
+-- Function to check if pvp talents are active for the player
+local function ArePvpTalentsActive()
+    local inInstance, instanceType = IsInInstance()
+    if inInstance and (instanceType == "pvp" or instanceType == "arena") then
+        return true
+    elseif inInstance and (instanceType == "party" or instanceType == "raid" or instanceType == "scenario") then
+        return false
+    else
+        local talents = C_SpecializationInfo.GetAllSelectedPvpTalentIDs()
+        for _, pvptalent in pairs(talents) do
+            local spellID = select(6, GetPvpTalentInfoByID(pvptalent))
+            if IsPlayerSpell(spellID) then
+                return true
+            end
+        end
+    end
+end
+
+local function interruptDuration(destGUID, duration)
+	local unit
+	for i, p in ipairs(C_NamePlate_GetNamePlates()) do
+		unit = p.namePlateUnitToken
+		if (destGUID == UnitGUID(unit)) then
+			break
+		end
+	end
+	local duration3 = duration
+	if (unit ~= nil) then
+		local duration3 = duration
+		local shamTranquilAirBuff = false
+		local _, destClass = GetPlayerInfoByGUID(destGUID)
+		for i = 1, 120 do
+			local _, _, _, _, _, _, _, _, _, auxSpellId = UnitAura(unit, i, "HELPFUL")
+			if not auxSpellId then break end
+			if (destClass == "DRUID") then
+				if auxSpellId == 234084 then	-- Moon and Stars (Druid) [Interrupted Mechanic Duration -70% (stacks)]
+					duration = duration * 0.3
+				end
+			end
+			if auxSpellId == 317920 then		-- Concentration Aura (Paladin) [Interrupted Mechanic Duration -30% (stacks)]
+				duration = duration * 0.7
+			elseif auxSpellId == 383020 then	-- Tranquil Air (Shaman) [Interrupted Mechanic Duration -50% (doesn't stack)]
+				shamTranquilAirBuff = true
+			end
+		end
+		for i = 1, 120 do
+			local _, _, _, _, _, _, _, _, _, auxSpellId = UnitAura(unit, i, "HARMFUL")
+			if not auxSpellId then break end
+			if auxSpellId == 372048 then	-- Oppressing Roar (Evoker) [Interrupted Mechanic Duration +20%/+50% (PvP/PvE) (stacks)]
+				if ArePvpTalentsActive() then
+					duration = duration * 1.2
+					duration3 = duration3 * 1.2
+				else
+					duration = duration * 1.5
+					duration3 = duration3 * 1.5
+				end
+			end
+		end
+		if (shamTranquilAirBuff) then
+			duration3 = duration3 * 0.5
+			if (duration3 < duration) then
+				duration = duration3
+			end
+		end
+	end
+	return duration
+end
 
 local function Split(s, delimiter)
     result = {};
@@ -1513,7 +1619,7 @@ function fPB:CLEU()
 		-----------------------------------------------------------------------------------------------------------------
 		if ((event == "SPELL_SUMMON") or (event == "SPELL_CREATE")) and (spellId == 198838) then
 			if (destGUID ~= nil) then
-				local duration = 15
+				local duration = 18 --Totemic Focus Makes it 18
 				local guid = destGUID
 				local spawnTime
 				local unitType, _, _, _, _, _, spawnUID = strsplit("-", guid)
@@ -1572,6 +1678,30 @@ function fPB:CLEU()
 		--WarBanner Check (Totems Need a Spawn Time Check)
 		-----------------------------------------------------------------------------------------------------------------
 		if ((event == "SPELL_SUMMON") or (event == "SPELL_CREATE")) and (spellId == 236320) then
+			if (destGUID ~= nil) then
+				local duration = 15
+				local expiration = GetTime() + duration
+				if (WarBanner[destGUID] == nil) then
+					WarBanner[destGUID] = {}
+				end
+				WarBanner[destGUID] = { ["duration"] = duration, ["expiration"] = expiration }
+				Ctimer(duration + 1, function()	-- execute in some close next frame to accurate use of UnitAura function
+					WarBanner[destGUID] = nil
+					UpdateAllNameplates()
+				end)
+			end
+			if (destGUID ~= nil) then
+				local duration = 15
+				local expiration = GetTime() + duration
+				if (WarBanner[1] == nil) then
+					WarBanner[1] = {}
+				end
+				WarBanner[1] = { ["duration"] = duration, ["expiration"] = expiration }
+				Ctimer(duration + 1, function()	-- execute in some close next frame to accurate use of UnitAura function
+					WarBanner[1] = nil
+					UpdateAllNameplates()
+				end)
+			end
 			if (destGUID ~= nil) then
 				local duration = 15
 				local guid = destGUID
@@ -1680,6 +1810,7 @@ function fPB:CLEU()
 		--Summoned Spells Check
 		-----------------------------------------------------------------------------------------------------------------
 		if ((event == "SPELL_SUMMON") or (event == "SPELL_CREATE"))  then --Summoned CDs
+		--print(sourceName.." "..spellId.." Summoned "..substring(destGUID, -7).." fPB")
 			if listedSpell and listedSpell.spellTypeSummon then
 				if sourceGUID and (bit_band(sourceFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE) then isAlly = false else isAlly = true end
 				local guid = destGUID
@@ -1731,16 +1862,16 @@ function fPB:CLEU()
 						local name = GetSpellInfo(spellId)
 						if Interrupted[sourceGUID] then
 							for k, v in pairs(Interrupted[sourceGUID]) do
-								if v.destGUID then
-	                if substring(v.destGUID, -5) == substring(guid, -5) then --string.sub is to help witj Mirror Images bug
-	                  if ObjectExists(v.destGUID, ticker, v.namePrint, v.sourceName) then
-		                  --print(v.sourceName.." "..ObjectExists(v.destGUID, ticker, v.namePrint, v.sourceName).." "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Ticker")
-	                		Interrupted[sourceGUID][k] = nil
+								if v.destGUID and v.spellId ~= 394243 and v.spellId ~= 387979 and v.spellId ~= 394235 then --Dimensional Rift Hack
+									if substring(v.destGUID, -5) == substring(guid, -5) then --string.sub is to help witj Mirror Images bug
+	                  					if ObjectExists(v.destGUID, ticker, v.namePrint, v.sourceName) then
+		                 				 --print(v.sourceName.." "..ObjectExists(v.destGUID, ticker, v.namePrint, v.sourceName).." "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Ticker")
+	                						Interrupted[sourceGUID][k] = nil
 											UpdateAllNameplates()
-	                    self.ticker:Cancel()
+	                    					self.ticker:Cancel()
 											break
-	                  end
-	                end
+										end
+									end
 								end
 							end
 						end
@@ -1753,7 +1884,7 @@ function fPB:CLEU()
 		-----------------------------------------------------------------------------------------------------------------
 		--Casted  CDs w/o Aura (fury of Elune)
 		-----------------------------------------------------------------------------------------------------------------
-		if (event == "SPELL_CAST_SUCCESS") and (spellId == 202770)  then --Casted  CDs w/o Aura (fury of Elune)
+		if (event == "SPELL_CAST_SUCCESS") and (spellId == 202770 or spellId == 202359)  then --Casted  CDs w/o Aura 
 			if castedAuraIds[spellId] and sourceGUID and (bit_band(sourceFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE) then
 				local guid = destGUID
 				local duration = castedAuraIds[spellId]
@@ -1808,7 +1939,10 @@ function fPB:CLEU()
 						end
 					 if unit and (select(7, UnitChannelInfo(unit)) == false) then
 						local duration = interruptsIds[spellId]
-					  local type = "HARMFUL"
+						if (duration ~= nil) then
+							duration = interruptDuration(destGUID, duration) or duration
+						end
+					  	local type = "HARMFUL"
 	 					local name, _, icon = GetSpellInfo(spellId)
 	 					local stack = 0
 	 					local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
@@ -1865,6 +1999,9 @@ function fPB:CLEU()
 						end
 					end
 					local duration = interruptsIds[spellId]
+					if (duration ~= nil) then
+						duration = interruptDuration(destGUID, duration) or duration
+					end
 					local type = "HARMFUL"
 					local name, _, icon = GetSpellInfo(spellId)
 					local stack = 0

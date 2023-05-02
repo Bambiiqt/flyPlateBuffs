@@ -1,6 +1,7 @@
 ## Interface: 100000
 ## Title: flyerPlateBuffs
 ## Version: 10.0.0.0
+## IconTexture: Interface\AddOns\BambiUi\Icon
 ## Notes: Shows buffs/debuffs on nameplates
 ## Author: FlyNeko / Bambiqt
 ## SavedVariables: flyPlateBuffsDB
