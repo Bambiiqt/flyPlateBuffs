@@ -330,142 +330,14 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 	else
 		EnemyBuff = nil
 	end
-	-----------------------------------------------------------------------------------------------------------------
-	--Icon Changes
-	-----------------------------------------------------------------------------------------------------------------
-	if spellId == 45524 then --Chains of Ice Dk
-		--icon = 463560
-		--icon = 236922
-		icon = 236925
-	end
-
-	if spellId == 334693 then --Abosolute Zero Frost Dk Legendary Stun
-		icon = 517161
-	end
-
-	if spellId == 317589 then --Mirros of Toremnt, Tormenting Backlash (Venthyr Mage) to Frost Jaw
-		icon = 538562
-	end
-
-	if spellId == 115196 then --Shiv
-		icon = 135428
-	end
-
-	if spellId == 199845 then --Psyflay
-		icon = 537021
-	end
-
-	if spellId == 285515 then --Frost Shock to Frost Nove
-		icon = 135848
-	end
-
-	if spellId == 317929 then --Aura Mastery Cast Immune Pally
-		icon = 135863
-	end
-
-	if spellId == 199545 then --Steed of Glory Hack
-		icon = 135890
-	end
-
-	if spellId == 329543 then --Divine Ascension
-		icon = 2103871
-	end
-
-	if spellId == 328530 then --Divine Ascension
-		icon = 2103871
-	end
-
-	if spellId == 387636 then --Soulburn Healthstone
-		icon = 538745
-	end
-
-	if spellId == 363916 then --Obsidian Scales w/Mettles
-		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
-		TooltipUtil.SurfaceArgs(tooltipData)
-
-		for _, line in ipairs(tooltipData.lines) do
-			TooltipUtil.SurfaceArgs(line)
-		end
-	   --print("Unit Aura: ", tooltipData.lines[1].leftText)
-	   --print("Aura Info: ", tooltipData.lines[2].leftText)
-	    if strfind(tooltipData.lines[2].leftText, "Immune") then
-			icon = 1526594
-		end
-	end
-
-	if spellId == 319504 then --Finds Hemotoxin for Shiv
-		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
-		TooltipUtil.SurfaceArgs(tooltipData)
-
-		for _, line in ipairs(tooltipData.lines) do
-			TooltipUtil.SurfaceArgs(line)
-		end
-	   --print("Unit Aura: ", tooltipData.lines[1].leftText)
-	   --print("Aura Info: ", tooltipData.lines[2].leftText)
-		if strfind(tooltipData.lines[2].leftText, "35") then
-			icon = 3610996
-		else
-			return 
-		end
-	end
-
-	if spellId == 334275 then --Amplify Curse's Exhaustion
-		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
-		TooltipUtil.SurfaceArgs(tooltipData)
-
-		for _, line in ipairs(tooltipData.lines) do
-			TooltipUtil.SurfaceArgs(line)
-		end
-		--print("Unit Aura: ", tooltipData.lines[1].leftText)
-		--print("Aura Info: ", tooltipData.lines[2].leftText)
-		if strfind(tooltipData.lines[2].leftText, "70") then
-			stack = 70
-		else
-			
-		end
-	end
-	if spellId == 1714  then --Amplify Curse's Tongues
-		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
-		TooltipUtil.SurfaceArgs(tooltipData)
-
-		for _, line in ipairs(tooltipData.lines) do
-			TooltipUtil.SurfaceArgs(line)
-		end
-		--print("Unit Aura: ", tooltipData.lines[1].leftText)
-		--print("Aura Info: ", tooltipData.lines[2].leftText)
-		if not strfind(tooltipData.lines[2].leftText, "10") then
-			stack = 20
-		else
-			
-		end
-	end
-	if spellId == 702 then --Amplify Curse's Weakness
-		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
-		TooltipUtil.SurfaceArgs(tooltipData)
-
-		for _, line in ipairs(tooltipData.lines) do
-			TooltipUtil.SurfaceArgs(line)
-		end
-		--print("Unit Aura: ", tooltipData.lines[1].leftText)
-		--print("Aura Info: ", tooltipData.lines[2].leftText)
-		if strfind(tooltipData.lines[2].leftText, "100") then
-			stack = 100
-		else
-			
-		end
-	end
-
 
 	-----------------------------------------------------------------------------------------------------------------
-	--Icy Veins Stacks
+	--SmokeBomb Check For Arena
 	-----------------------------------------------------------------------------------------------------------------
-	if spellId == 12472 then
-		for i = 1, 40 do
-			local _, _, c, _, d, e, _, _, _, s = UnitAura(nameplateID, id, type)
-			if not s then break end
-			if s == 382148 then
-				count = c
-			end
+	if spellId == 212183 then -- Smoke Bomb
+		if caster and SmokeBombAuras[UnitGUID(caster)] then
+			duration = SmokeBombAuras[UnitGUID(caster)].duration --Add a check, i rogue bombs in stealth there is a source but the cleu doesnt regester a time
+			expiration = SmokeBombAuras[UnitGUID(caster)].expiration
 		end
 	end
 
@@ -545,23 +417,13 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		end
 	end
 
-		-----------------------------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------------------------
 	--SGrounds Add Timer Check For Arena
 	-----------------------------------------------------------------------------------------------------------------
 	if spellId == 289655 then -- SGrounds
 		if caster and SGrounds[UnitGUID(caster)] then
 			duration = SGrounds[UnitGUID(caster)].duration
 			expiration = SGrounds[UnitGUID(caster)].expiration
-		end
-	end
-
-	-----------------------------------------------------------------------------------------------------------------
-	--SmokeBomb Check For Arena
-	-----------------------------------------------------------------------------------------------------------------
-	if spellId == 212183 then -- Smoke Bomb
-		if caster and SmokeBombAuras[UnitGUID(caster)] then
-			duration = SmokeBombAuras[UnitGUID(caster)].duration --Add a check, i rogue bombs in stealth there is a source but the cleu doesnt regester a time
-			expiration = SmokeBombAuras[UnitGUID(caster)].expiration
 		end
 	end
 
@@ -574,6 +436,151 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 			expiration = Barrier[UnitGUID(caster)].expiration
 		end
 	end
+
+	-----------------------------------------------------------------------------------------------------------------
+	--Two Buff Conditions Icy Veins Stacks
+	-----------------------------------------------------------------------------------------------------------------
+	if spellId == 12472 then
+		for i = 1, 40 do
+			local _, _, c, _, d, e, _, _, _, s = UnitAura(nameplateID, id, type)
+			if not s then break end
+			if s == 382148 then
+				count = c
+			end
+		end
+	end
+
+	-----------------------------------------------------------------------------------------------------------------
+	--Debuff Icon Changes
+	-----------------------------------------------------------------------------------------------------------------
+	if spellId == 45524 then --Chains of Ice Dk
+		--icon = 463560
+		--icon = 236922
+		icon = 236925
+	end
+
+	if spellId == 334693 then --Abosolute Zero Frost Dk Legendary Stun
+		icon = 517161
+	end
+
+	if spellId == 317589 then --Mirros of Toremnt, Tormenting Backlash (Venthyr Mage) to Frost Jaw
+		icon = 538562
+	end
+
+	if spellId == 115196 then --Shiv
+		icon = 135428
+	end
+
+	if spellId == 199845 then --Psyflay
+		icon = 537021
+	end
+
+	if spellId == 285515 then --Frost Shock to Frost Nove
+		icon = 135848
+	end
+
+	-----------------------------------------------------------------------------------------------------------------
+	--Buff Icon Changes
+	-----------------------------------------------------------------------------------------------------------------
+	if spellId == 317929 then --Aura Mastery Cast Immune Pally
+		icon = 135863
+	end
+
+	if spellId == 199545 then --Steed of Glory Hack
+		icon = 135890
+	end
+
+	if spellId == 329543 then --Divine Ascension
+		icon = 2103871
+	end
+
+	if spellId == 328530 then --Divine Ascension
+		icon = 2103871
+	end
+
+	if spellId == 387636 then --Soulburn Healthstone
+		icon = 538745
+	end
+
+	if spellId == 363916 then --Obsidian Scales w/Mettles
+		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
+		TooltipUtil.SurfaceArgs(tooltipData)
+
+		for _, line in ipairs(tooltipData.lines) do
+			TooltipUtil.SurfaceArgs(line)
+		end
+	   --print("Unit Aura: ", tooltipData.lines[1].leftText)
+	   --print("Aura Info: ", tooltipData.lines[2].leftText)
+	    if strfind(tooltipData.lines[2].leftText, "Immune") then
+			icon = 1526594
+		end
+	end
+
+	if spellId == 319504 then --Finds Hemotoxin for Shiv
+		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
+		TooltipUtil.SurfaceArgs(tooltipData)
+
+		for _, line in ipairs(tooltipData.lines) do
+			TooltipUtil.SurfaceArgs(line)
+		end
+	   --print("Unit Aura: ", tooltipData.lines[1].leftText)
+	   --print("Aura Info: ", tooltipData.lines[2].leftText)
+		if strfind(tooltipData.lines[2].leftText, "35") then
+			icon = 3610996
+		else
+			return 
+		end
+	end
+
+	-----------------------------------------------------------------------------------------------------------------
+	--Count Changes
+	-----------------------------------------------------------------------------------------------------------------
+	if spellId == 1714  then --Amplify Curse's Tongues
+		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
+		TooltipUtil.SurfaceArgs(tooltipData)
+
+		for _, line in ipairs(tooltipData.lines) do
+			TooltipUtil.SurfaceArgs(line)
+		end
+		--print("Unit Aura: ", tooltipData.lines[1].leftText)
+		--print("Aura Info: ", tooltipData.lines[2].leftText)
+		if not strfind(tooltipData.lines[2].leftText, "10") then
+			stack = 20
+		else
+			
+		end
+	end
+	if spellId == 702 then --Amplify Curse's Weakness
+		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
+		TooltipUtil.SurfaceArgs(tooltipData)
+
+		for _, line in ipairs(tooltipData.lines) do
+			TooltipUtil.SurfaceArgs(line)
+		end
+		--print("Unit Aura: ", tooltipData.lines[1].leftText)
+		--print("Aura Info: ", tooltipData.lines[2].leftText)
+		if strfind(tooltipData.lines[2].leftText, "100") then
+			stack = 100
+		else
+			
+		end
+	end
+	if spellId == 334275 then --Amplify Curse's Exhaustion
+		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
+		TooltipUtil.SurfaceArgs(tooltipData)
+
+		for _, line in ipairs(tooltipData.lines) do
+			TooltipUtil.SurfaceArgs(line)
+		end
+		--print("Unit Aura: ", tooltipData.lines[1].leftText)
+		--print("Aura Info: ", tooltipData.lines[2].leftText)
+		if strfind(tooltipData.lines[2].leftText, "70") then
+			stack = 70
+		else
+			
+		end
+	end
+
 
 
 
@@ -712,11 +719,12 @@ local function UpdateBuffIcon(self, buff)
 	else
 		self.texture:SetTexCoord(0, 1, 0, 1)
 	end
+
 	-----------------------------------------------------------------------------------------------------------------
 	----Destaurate Icon if RedifEnemy
 	-----------------------------------------------------------------------------------------------------------------
 
-	if self.EnemyBuff then
+	if self.EnemyBuff then --Smokebob Hue
 		self.texture:SetDesaturated(1) --Destaurate Icon
 		self.texture:SetVertexColor(1, .25, 0);
 	else
@@ -1031,6 +1039,19 @@ end
 
 local creatureId = {
 
+
+	[27829] = {25 , 132182}, --Ebon Gargoyle
+	[149555] = {25 , 298667}, --Abomination
+
+	[1964] = {30, 132129}, --Treant
+
+	[510] = {45, 135862}, --Water Elemental
+	[31216] = {40, 135994}, --Mirrorr Image
+
+	[19668] = {15, 136199}, --Shadowfiend
+	[62982] = {15, 136214}, --Minbender
+	[101398] = {12, 537021}, --Psyfiend
+
 	[95072] = {60, 136024}, --Greater Earth Elemntal
 	[61056] = {60, 136024}, --Primal Earth Elemntal
 	[95061] = {30, 135790}, --Greater Fire Elemntal
@@ -1040,18 +1061,6 @@ local creatureId = {
 	[29264] = {15, 237577}, --Spirit Wolf
 	[100820] = {15, 237577}, --Spirit Wolf
 	['Spirit Wolf'] = {15, 237577}, --Spirit Wolf
-
-	[27829] = {25 , 132182}, --Ebon Gargoyle
-	[149555] = {25 , 298667}, --Abomination
-
-	[510] = {45, 135862}, --Water Elemental
-	[31216] = {40, 135994}, --Mirrorr Image
-
-	[19668] = {15, 136199}, --Shadowfiend
-	[62982] = {15, 136214}, --Minbender
-	[101398] = {12, 537021}, --Psyfiend
-
-	[1964] = {30, 132129}, --Treant
 
 	["Infernal"] = {30, 136219}, --Infernal
 	[135002] = {15, 2065628}, --Demonic Tyrant
@@ -1611,8 +1620,27 @@ end
 
 function fPB:CLEU()
 	local _, event, _, sourceGUID, sourceName, sourceFlags, _, destGUID, destName, destFlags, _, spellId, _, _, _, _, spellSchool = CombatLogGetCurrentEventInfo()
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------------------------
+	--SmokeBomb Check
+	-----------------------------------------------------------------------------------------------------------------
+	if ((event == "SPELL_CAST_SUCCESS") and (spellId == 212182 or spellId == 359053)) then
+		if (sourceGUID ~= nil) then
+			local duration = 5
+			local expiration = GetTime() + duration
+			if (SmokeBombAuras[sourceGUID] == nil) then
+				SmokeBombAuras[sourceGUID] = {}
+			end
+			SmokeBombAuras[sourceGUID] = { ["duration"] = duration, ["expiration"] = expiration }
+			Ctimer(duration + 1, function()	-- execute in some close next frame to accurate use of UnitAura function
+				SmokeBombAuras[sourceGUID] = nil
+				UpdateAllNameplates()
+			end)
+		end
+		UpdateAllNameplates()
+	end
+
 	-----------------------------------------------------------------------------------------------------------------
 	--Earthen Check (Totems Need a Spawn Time Check)
 	-----------------------------------------------------------------------------------------------------------------
@@ -1721,25 +1749,6 @@ function fPB:CLEU()
 				WarBanner[spawnTime] = nil
 			end)
 			Ctimer(.2, function()	-- execute a second timer to ensure it catches
-				UpdateAllNameplates()
-			end)
-		end
-		UpdateAllNameplates()
-	end
-
-	-----------------------------------------------------------------------------------------------------------------
-	--SmokeBomb Check
-	-----------------------------------------------------------------------------------------------------------------
-	if ((event == "SPELL_CAST_SUCCESS") and (spellId == 212182 or spellId == 359053)) then
-		if (sourceGUID ~= nil) then
-			local duration = 5
-			local expiration = GetTime() + duration
-			if (SmokeBombAuras[sourceGUID] == nil) then
-				SmokeBombAuras[sourceGUID] = {}
-			end
-			SmokeBombAuras[sourceGUID] = { ["duration"] = duration, ["expiration"] = expiration }
-			Ctimer(duration + 1, function()	-- execute in some close next frame to accurate use of UnitAura function
-				SmokeBombAuras[sourceGUID] = nil
 				UpdateAllNameplates()
 			end)
 		end
@@ -1920,7 +1929,7 @@ function fPB:CLEU()
 	-----------------------------------------------------------------------------------------------------------------
 	--Channeled Kicks
 	-----------------------------------------------------------------------------------------------------------------
-		if (destGUID ~= nil) then --Channeled Kicks
+	if (destGUID ~= nil) then --Channeled Kicks
 		if (event == "SPELL_CAST_SUCCESS") and not (event == "SPELL_INTERRUPT") then
 			if interruptsIds[spellId] then
 				local unit
