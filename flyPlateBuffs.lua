@@ -331,6 +331,9 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		EnemyBuff = nil
 	end
 
+	--------------------------------------------------------------------------------------------------------------------------------------------------------------
+	--CLEU Deuff Timer
+	--------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-----------------------------------------------------------------------------------------------------------------
 	--SmokeBomb Check For Arena
 	-----------------------------------------------------------------------------------------------------------------
@@ -338,6 +341,29 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		if caster and SmokeBombAuras[UnitGUID(caster)] then
 			duration = SmokeBombAuras[UnitGUID(caster)].duration --Add a check, i rogue bombs in stealth there is a source but the cleu doesnt regester a time
 			expiration = SmokeBombAuras[UnitGUID(caster)].expiration
+		end
+	end
+
+	--------------------------------------------------------------------------------------------------------------------------------------------------------------
+	--CLEU Buff Timer
+	--------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------------------------------
+	--Barrier Add Timer Check For Arena
+	-----------------------------------------------------------------------------------------------------------------
+	if spellId == 81782 then -- Barrier
+		if caster and Barrier[UnitGUID(caster)] then
+			duration = Barrier[UnitGUID(caster)].duration
+			expiration = Barrier[UnitGUID(caster)].expiration
+		end
+	end
+
+	-----------------------------------------------------------------------------------------------------------------
+	--SGrounds Add Timer Check For Arena
+	-----------------------------------------------------------------------------------------------------------------
+	if spellId == 289655 then -- SGrounds
+		if caster and SGrounds[UnitGUID(caster)] then
+			duration = SGrounds[UnitGUID(caster)].duration
+			expiration = SGrounds[UnitGUID(caster)].expiration
 		end
 	end
 
@@ -417,25 +443,7 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		end
 	end
 
-	-----------------------------------------------------------------------------------------------------------------
-	--SGrounds Add Timer Check For Arena
-	-----------------------------------------------------------------------------------------------------------------
-	if spellId == 289655 then -- SGrounds
-		if caster and SGrounds[UnitGUID(caster)] then
-			duration = SGrounds[UnitGUID(caster)].duration
-			expiration = SGrounds[UnitGUID(caster)].expiration
-		end
-	end
 
-	-----------------------------------------------------------------------------------------------------------------
-	--Barrier Add Timer Check For Arena
-	-----------------------------------------------------------------------------------------------------------------
-	if spellId == 81782 then -- Barrier
-		if caster and Barrier[UnitGUID(caster)] then
-			duration = Barrier[UnitGUID(caster)].duration
-			expiration = Barrier[UnitGUID(caster)].expiration
-		end
-	end
 
 	-----------------------------------------------------------------------------------------------------------------
 	--Two Buff Conditions Icy Veins Stacks
@@ -467,12 +475,12 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		icon = 538562
 	end
 
-	if spellId == 115196 then --Shiv
-		icon = 135428
-	end
-
 	if spellId == 199845 then --Psyflay
 		icon = 537021
+	end
+
+	if spellId == 115196 then --Shiv
+		icon = 135428
 	end
 
 	if spellId == 285515 then --Frost Shock to Frost Nove
@@ -482,20 +490,20 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 	-----------------------------------------------------------------------------------------------------------------
 	--Buff Icon Changes
 	-----------------------------------------------------------------------------------------------------------------
-	if spellId == 317929 then --Aura Mastery Cast Immune Pally
-		icon = 135863
-	end
-
-	if spellId == 199545 then --Steed of Glory Hack
-		icon = 135890
-	end
-
 	if spellId == 329543 then --Divine Ascension
 		icon = 2103871
 	end
 
 	if spellId == 328530 then --Divine Ascension
 		icon = 2103871
+	end
+
+	if spellId == 317929 then --Aura Mastery Cast Immune Pally
+		icon = 135863
+	end
+
+	if spellId == 199545 then --Steed of Glory Hack
+		icon = 135890
 	end
 
 	if spellId == 387636 then --Soulburn Healthstone
@@ -1622,6 +1630,10 @@ function fPB:CLEU()
 	local _, event, _, sourceGUID, sourceName, sourceFlags, _, destGUID, destName, destFlags, _, spellId, _, _, _, _, spellSchool = CombatLogGetCurrentEventInfo()
 	-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	--------------------------------------------------------------------------------------------------------------------------------------------------------------
+	--CLEU Deuff Timer
+	--------------------------------------------------------------------------------------------------------------------------------------------------------------
+	
 	-----------------------------------------------------------------------------------------------------------------
 	--SmokeBomb Check
 	-----------------------------------------------------------------------------------------------------------------
@@ -1635,6 +1647,51 @@ function fPB:CLEU()
 			SmokeBombAuras[sourceGUID] = { ["duration"] = duration, ["expiration"] = expiration }
 			Ctimer(duration + 1, function()	-- execute in some close next frame to accurate use of UnitAura function
 				SmokeBombAuras[sourceGUID] = nil
+				UpdateAllNameplates()
+			end)
+		end
+	end
+		
+	--------------------------------------------------------------------------------------------------------------------------------------------------------------
+	--CLEU Buff Timer
+	--------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	-----------------------------------------------------------------------------------------------------------------
+	--Barrier Check
+	-----------------------------------------------------------------------------------------------------------------
+	if ((event == "SPELL_CAST_SUCCESS") and (spellId == 62618)) then
+		if (sourceGUID ~= nil) then
+			local duration = 10
+			local expiration = GetTime() + duration
+			if (Barrier[sourceGUID] == nil) then
+				Barrier[sourceGUID] = {}
+			end
+			Barrier[sourceGUID] = { ["duration"] = duration, ["expiration"] = expiration }
+			Ctimer(duration + 1, function()	-- execute iKn some close next frame to accurate use of UnitAura function
+				Barrier[sourceGUID] = nil
+			end)
+			Ctimer(.2, function()	-- execute a second timer to ensure it catches
+				UpdateAllNameplates()
+			end)
+		end
+		UpdateAllNameplates()
+	end
+
+	-----------------------------------------------------------------------------------------------------------------
+	--SGrounds Check
+	-----------------------------------------------------------------------------------------------------------------
+	if ((event == "SPELL_CAST_SUCCESS") and (spellId == 34861)) then
+		if (sourceGUID ~= nil) then
+			local duration = 5
+			local expiration = GetTime() + duration
+			if (SGrounds[sourceGUID] == nil) then
+				SGrounds[sourceGUID] = {}
+			end
+			SGrounds[sourceGUID] = { ["duration"] = duration, ["expiration"] = expiration }
+			Ctimer(duration + 1, function()	-- execute iKn some close next frame to accurate use of UnitAura function
+				SGrounds[sourceGUID] = nil
+			end)
+			Ctimer(.2, function()	-- execute a second timer to ensure it catches
 				UpdateAllNameplates()
 			end)
 		end
@@ -1755,47 +1812,6 @@ function fPB:CLEU()
 		UpdateAllNameplates()
 	end
 
-	-----------------------------------------------------------------------------------------------------------------
-	--Barrier Check
-	-----------------------------------------------------------------------------------------------------------------
-	if ((event == "SPELL_CAST_SUCCESS") and (spellId == 62618)) then
-		if (sourceGUID ~= nil) then
-			local duration = 10
-			local expiration = GetTime() + duration
-			if (Barrier[sourceGUID] == nil) then
-				Barrier[sourceGUID] = {}
-			end
-			Barrier[sourceGUID] = { ["duration"] = duration, ["expiration"] = expiration }
-			Ctimer(duration + 1, function()	-- execute iKn some close next frame to accurate use of UnitAura function
-				Barrier[sourceGUID] = nil
-			end)
-			Ctimer(.2, function()	-- execute a second timer to ensure it catches
-				UpdateAllNameplates()
-			end)
-		end
-		UpdateAllNameplates()
-	end
-
-	-----------------------------------------------------------------------------------------------------------------
-	--SGrounds Check
-	-----------------------------------------------------------------------------------------------------------------
-	if ((event == "SPELL_CAST_SUCCESS") and (spellId == 34861)) then
-		if (sourceGUID ~= nil) then
-			local duration = 5
-			local expiration = GetTime() + duration
-			if (SGrounds[sourceGUID] == nil) then
-				SGrounds[sourceGUID] = {}
-			end
-			SGrounds[sourceGUID] = { ["duration"] = duration, ["expiration"] = expiration }
-			Ctimer(duration + 1, function()	-- execute iKn some close next frame to accurate use of UnitAura function
-				SGrounds[sourceGUID] = nil
-			end)
-			Ctimer(.2, function()	-- execute a second timer to ensure it catches
-				UpdateAllNameplates()
-			end)
-		end
-		UpdateAllNameplates()
-	end
 	-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
