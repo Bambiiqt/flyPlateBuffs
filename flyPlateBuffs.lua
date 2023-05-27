@@ -1051,7 +1051,8 @@ local creatureId = {
 	[27829] = {25 , 132182}, --Ebon Gargoyle
 	[149555] = {25 , 298667}, --Abomination
 
-	[1964] = {30, 132129}, --Treant
+	[1964] = {10, 132129}, --Treant
+	[103822] = {10, 132129}, --Treant
 
 	[510] = {45, 135862}, --Water Elemental
 	[31216] = {40, 135994}, --Mirrorr Image
@@ -1475,7 +1476,7 @@ local interruptsIds = {
 	[57994]  = 3,		-- Wind Shear (Shaman)
 	[91802]  = 2,		-- Shambling Rush (Death Knight)
 	[96231]  = 4,		-- Rebuke (Paladin)
-	[93985]  = 4,		-- Skull Bash (Druid Feral)
+	[93985]  = 3,		-- Skull Bash
 	[97547]  = 5,		-- Solar Beam (Druid Balance)
 	[115781] = 6,		-- Optical Blast (Warlock)
 	[116705] = 4,		-- Spear Hand Strike (Monk)
