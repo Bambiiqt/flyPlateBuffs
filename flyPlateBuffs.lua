@@ -524,6 +524,20 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		end
 	end
 
+	if spellId == 358267 then --Hover/Unburdened Flight
+        local tooltipData = CTooltipInfo.GetUnitAura(nameplateID, id, type)
+        TooltipUtil.SurfaceArgs(tooltipData)
+
+        for _, line in ipairs(tooltipData.lines) do
+            TooltipUtil.SurfaceArgs(line)
+        end
+       --print("Unit Aura: ", tooltipData.lines[1].leftText)
+       --print("Aura Info: ", tooltipData.lines[2].leftText)
+        if strfind(tooltipData.lines[2].leftText, "Immune") then
+            icon = 1029587
+        end
+    end
+
 	if spellId == 319504 then --Finds Hemotoxin for Shiv
 		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
 		TooltipUtil.SurfaceArgs(tooltipData)
