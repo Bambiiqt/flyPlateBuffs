@@ -525,7 +525,7 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 	end
 
 	if spellId == 358267 then --Hover/Unburdened Flight
-        local tooltipData = CTooltipInfo.GetUnitAura(nameplateID, id, type)
+        local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
         TooltipUtil.SurfaceArgs(tooltipData)
 
         for _, line in ipairs(tooltipData.lines) do
