@@ -1061,9 +1061,7 @@ end
 
 local creatureId = {
 
-
 	[27829] = {25 , 132182}, --Ebon Gargoyle
-	[149555] = {25 , 298667}, --Abomination
 
 	[1964] = {10, 132129}, --Treant
 	[103822] = {10, 132129}, --Treant
@@ -1582,62 +1580,24 @@ local function interruptDuration(destGUID, duration)
 	return duration
 end
 
-local function Split(s, delimiter)
-    result = {};
-    for match in (s..delimiter):gmatch("(.-)"..delimiter) do
-        table.insert(result, match);
-    end
-    return result;
-end
 
-local tip = CreateFrame('GameTooltip', 'ObjectExistsTooltip', nil, 'GameTooltipTemplate')
-local function ObjectExists(guid, ticker, name, sourceName) --Used for Infrnals and Ele
-  tip:SetOwner(WorldFrame, 'ANCHOR_NONE')
-  tip:SetHyperlink('unit:' .. guid or '')
-	local text1 = ObjectExistsTooltipTextLeft1
-	local text2 = ObjectExistsTooltipTextLeft2
-	local text3 = ObjectExistsTooltipTextLeft3
-	if strfind(tostring(sourceName), "-") then
-		local sourceNameTable = Split(sourceName, "-")
-		sourceName = sourceNameTable[1]
+local function ObjectDNE(guid) --Used for Infrnals and Ele
+	local tooltipData =  C_TooltipInfo.GetHyperlink('unit:' .. guid or '')
+	TooltipUtil.SurfaceArgs(tooltipData)
+
+	for _, line in ipairs(tooltipData.lines) do
+		TooltipUtil.SurfaceArgs(line)
 	end
-	if (text1 and (type(text1:GetText()) == "string")) then
-		if strmatch(text1:GetText(), "Corpse") then
-			--print(text1:GetText().." text1")
-			return "Corpse"
+
+	for i = 1, #tooltipData.lines do 
+ 		local text = tooltipData.lines[i].leftText
+		 if text and (type(text == "string")) then
+			--print(i.." "..text)
+			if strfind(text, "Level ??") or strfind(text, "Corpse") then 
+				return "Despawned"
+			end
 		end
 	end
-	if (text2 and (type(text2:GetText()) == "string")) then
-		if strmatch(text2:GetText(), "Corpse") then
-			--print(text2:GetText().." text 2")
-			return "Corpse"
-		end
-	end
-	if (text3 and (type(text3:GetText()) == "string")) then
-		if strmatch(text3:GetText(), "Corpse") then
-			--print(text3:GetText().." text3")
-			return "Corpse"
-		end
-	end
-	if (text1 and (type(text1:GetText()) == "string")) then
-		if strfind(text1:GetText(), tostring(sourceName)) then
-			--print(text1:GetText().." text1")
-			return false
-		end
-	end
-	if (text2 and (type(text2:GetText()) == "string")) then
-		if strfind(text2:GetText(), tostring(sourceName)) then
-			--print(text2:GetText().." text 2")
-			return false
-		end
-	end
-	if (text3 and (type(text3:GetText()) == "string")) then
-		if strfind(text3:GetText(), tostring(sourceName)) then
-			--print(text3:GetText().." text3")
-			return false
-		end
-	end
-	return "Despawned"
 end
 
 
@@ -1896,15 +1856,15 @@ function fPB:CLEU()
 					end
 				end)
 				local iteration, check
-				iteration = duration * 4 + 5; check = .25
+				iteration = duration * 10 + 5; check = .1
 				self.ticker = C_Timer.NewTicker(check, function()
 					local name = GetSpellInfo(spellId)
 					if Interrupted[sourceGUID] then
 						for k, v in pairs(Interrupted[sourceGUID]) do
 							if v.destGUID and v.spellId ~= 394243 and v.spellId ~= 387979 and v.spellId ~= 394235 then --Dimensional Rift Hack
 								if substring(v.destGUID, -5) == substring(guid, -5) then --string.sub is to help witj Mirror Images bug
-									if ObjectExists(v.destGUID, ticker, v.namePrint, v.sourceName) then
-										--print(v.sourceName.." "..ObjectExists(v.destGUID, ticker, v.namePrint, v.sourceName).." "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Ticker")
+									if ObjectDNE(v.destGUID, ticker, v.namePrint, v.sourceName) then
+										--print(v.sourceName.." "..ObjectDNE(v.destGUID, ticker, v.namePrint, v.sourceName).." "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Ticker")
 										Interrupted[sourceGUID][k] = nil
 										UpdateAllNameplates()
 										self.ticker:Cancel()
