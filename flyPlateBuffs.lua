@@ -160,6 +160,37 @@ do --add default spells
 	end
 end
 
+local function ActionButton_SetupOverlayGlow(button)
+	-- If we already have a SpellActivationAlert then just early return. We should already be setup
+	if button.SpellActivationAlert then
+		return;
+	end
+
+	button.SpellActivationAlert = CreateFrame("Frame", nil, button, "ActionBarButtonSpellActivationAlert");
+
+	--Make the height/width available before the next frame:
+	button.SpellActivationAlert:SetPoint("CENTER", button, "CENTER", 0, 0);
+	button.SpellActivationAlert:Hide();
+end
+
+local function ActionButton_ShowOverlayGlow(button, scale)
+	ActionButton_SetupOverlayGlow(button);
+	button.SpellActivationAlert:SetSize(db.baseWidth * scale * 1.5, db.baseWidth * scale * 1.5);
+	button.SpellActivationAlert:Show();
+	button.SpellActivationAlert.ProcLoop:Play();
+	button.SpellActivationAlert.ProcStartFlipbook:Hide()
+end
+
+local function ActionButton_HideOverlayGlow(button)
+	if not button.SpellActivationAlert then
+		return;
+	end
+
+ 	button.SpellActivationAlert:Hide();
+
+end
+
+
 local hexFontColors = {
     ["logo"] = "ff36ffe7",
     ["accent"] = "ff9b6ef3",
@@ -1038,8 +1069,8 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 		-------------------------------------------------------------------------------------------------------------------
 		--Glow
 		-------------------------------------------------------------------------------------------------------------------
-		if buffIcon.spellId and buffIcon.spellId == 199448 then --Ultimate Sac Glow
-			ActionButton_ShowOverlayGlow(buffIcon)
+		if buffIcon.spellId and (buffIcon.spellId == 199448) then -- or buffIcon.spellId == 377362) then --Ultimate Sac Glow
+			ActionButton_ShowOverlayGlow(buffIcon, buff.scale)
 		else
 			ActionButton_HideOverlayGlow(buffIcon)
 		end
@@ -1052,6 +1083,7 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 		for i = #PlatesBuffs[frame]+1, #frame.fPBiconsFrame.iconsFrame do
 			if frame.fPBiconsFrame.iconsFrame[i] then
 				frame.fPBiconsFrame.iconsFrame[i]:Hide()
+				ActionButton_HideOverlayGlow(frame.fPBiconsFrame.iconsFrame[i])
 			end
 		end
 	end
@@ -1587,6 +1619,10 @@ local function ObjectDNE(guid) --Used for Infrnals and Ele
 
 	for _, line in ipairs(tooltipData.lines) do
 		TooltipUtil.SurfaceArgs(line)
+	end
+
+	if #tooltipData.lines == 1 then -- Fel Obelisk
+		return "Despawned"
 	end
 
 	for i = 1, #tooltipData.lines do 
