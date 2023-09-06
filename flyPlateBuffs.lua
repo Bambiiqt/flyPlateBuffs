@@ -1097,6 +1097,7 @@ local creatureId = {
 
 	[1964] = {10, 132129}, --Treant
 	[103822] = {10, 132129}, --Treant
+	[54983] = {15, 132129}, --Grove Guardians
 
 	[510] = {45, 135862}, --Water Elemental
 	[31216] = {40, 135994}, --Mirrorr Image
@@ -2002,7 +2003,7 @@ function fPB:CLEU()
 						--print(sourceName.." kicked "..(select(1, UnitChannelInfo(unit))).." channel cast w/ "..name.. " from "..destName)
 						tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID, ["spellSchool"] = spellSchool})
 						UpdateAllNameplates()
-						Ctimer(interruptsIds[spellId], function()
+						Ctimer(duration, function()
 							if Interrupted[destGUID] then
 								Interrupted[destGUID][tablespot] = nil
 								UpdateAllNameplates()
@@ -2062,7 +2063,7 @@ function fPB:CLEU()
 					--print(sourceName.." kicked cast w/ "..name.. " from "..destName)
 					tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID, ["spellSchool"] = spellSchool})
 					UpdateAllNameplates()
-					Ctimer(interruptsIds[spellId], function()
+					Ctimer(duration, function()
 						if Interrupted[destGUID] then
 							Interrupted[destGUID][tablespot] = nil
 							UpdateAllNameplates()
