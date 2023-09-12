@@ -1531,7 +1531,7 @@ local interruptsIds = {
 	[132409] = 5,		-- Spell Lock (command demon) (Warlock)
 	[115781] = 5,		-- Optical Blast (Warlock)
 	[212619] = 5,		-- Call Felhunter (Warlock)
-	[347008] = 3,		-- Axe Toss(felguard) (Warlock)
+	[347008] = 3,		-- Axe Toss(felguard) (Warlock)(4 for PVE, 3 for PVP)
 	[6552]   = 3,		-- Pummel (Warrior)
 
 	--[11972] =  3,  		--Shield Bash (testing Purposes in Northern barrens)
@@ -1579,7 +1579,7 @@ local function interruptDuration(destGUID, duration)
 			if not auxSpellId then break end
 			if (destClass == "DRUID") then
 				if auxSpellId == 234084 then	-- Moon and Stars (Druid) [Interrupted Mechanic Duration -70% (stacks)]
-					duration = duration * 0.3
+					duration = duration * 0.5
 				end
 			end
 			if auxSpellId == 317920 then		-- Concentration Aura (Paladin) [Interrupted Mechanic Duration -30% (stacks)]
@@ -1591,10 +1591,10 @@ local function interruptDuration(destGUID, duration)
 		for i = 1, 120 do
 			local _, _, _, _, _, _, _, _, _, auxSpellId = UnitAura(unit, i, "HARMFUL")
 			if not auxSpellId then break end
-			if auxSpellId == 372048 then	-- Oppressing Roar (Evoker) [Interrupted Mechanic Duration +20%/+50% (PvP/PvE) (stacks)]
+			if auxSpellId == 372048 then	-- Oppressing Roar (Evoker) [Interrupted Mechanic Duration +30%/+50% (PvP/PvE) (stacks)]
 				if ArePvpTalentsActive() then
-					duration = duration * 1.2
-					duration3 = duration3 * 1.2
+					duration = duration * 1.3
+					duration3 = duration3 * 1.3
 				else
 					duration = duration * 1.5
 					duration3 = duration3 * 1.5
