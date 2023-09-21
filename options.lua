@@ -12,9 +12,6 @@ local linkColor = fPB.linkColor
 
 
 
-local tooltip = tooltip or CreateFrame("GameTooltip", "fPBScanSpellDescTooltip", UIParent, "GameTooltipTemplate")
-tooltip:Show()
-tooltip:SetOwner(UIParent, "ANCHOR_NONE")
 
 local minIconSize = 10
 local maxIconSize = 100
@@ -22,6 +19,47 @@ local minTextSize = 6
 local maxTextSize = 30
 local minInterval = 0
 local maxInterval = 80
+
+local classIcons = {
+    ["DEATHKNIGHT"] = 135771,
+    ["DEMONHUNTER"] = 1260827,
+    ["DRUID"] = 625999,
+    ["EVOKER"] = 4574311,
+    ["HUNTER"] = 626000,
+    ["MAGE"] = 626001,
+    ["MONK"] = 626002,
+    ["PALADIN"] = 626003,
+    ["PRIEST"] = 626004,
+    ["ROGUE"] = 626005,
+    ["SHAMAN"] = 626006,
+    ["WARLOCK"] = 626007,
+    ["WARRIOR"] = 626008,
+}
+
+local hexFontColors = {
+}
+
+for class, val in pairs(RAID_CLASS_COLORS) do
+	hexFontColors[class] = val.colorStr
+end
+
+local function GetIconString(icon, iconSize)
+    local size = iconSize or 0
+    local ltTexel = 0.08 * 256
+    local rbTexel = 0.92 * 256
+
+    if not icon then
+        icon = customIcons["?"]
+    end
+
+    return format("|T%s:%d:%d:0:0:256:256:%d:%d:%d:%d|t", icon, size, size, ltTexel, rbTexel, ltTexel, rbTexel)
+end
+
+local function Colorize(text, color)
+    if not text then return end
+    local hexColor = hexFontColors[color] or hexFontColors["blizzardFont"]
+    return "|c" .. hexColor .. text .. "|r"
+end
 
 local function CheckSort()
 	local i = 1
@@ -55,22 +93,39 @@ end
 local function cmp_col1(a, b)
 	if (a and b) then
 		local Spells = db.Spells
-		a = tostring(Spells[a].scale or a)
-		b = tostring(Spells[b].scale or b)
- 		return a > b
+		a = tostring(Spells[a].class or a)
+		b = tostring(Spells[b].class or b)
+ 		return a < b
 	end
 end
 
 local function cmp_col1_col2(a, b)
 	if (a and b) then
 		local Spells = db.Spells
-		a1 = tostring(Spells[a].scale or a)
-		b1 = tostring(Spells[b].scale or b)
-		a2 = tostring(Spells[a].name or a)
-		b2 = tostring(Spells[b].name or b)
-	 if a1 > b1 then return true end
-	 if a1 < b1 then return false end
-		 return a2 < b2
+		a1 = tostring(Spells[a].class or a)
+		b1 = tostring(Spells[b].class or b)
+		a2 = tostring(Spells[a].scale or a)
+		b2 = tostring(Spells[b].scale or b)
+	 if a1 < b1 then return true end
+	 if a1 > b1 then return false end
+		 return a2 > b2
+	 end
+end
+
+local function cmp_col1_col2_col3(a, b)
+	if (a and b ) then
+		local Spells = db.Spells
+		a1 = tostring(Spells[a].class or a)
+		b1 = tostring(Spells[b].class or b)
+		a2 = tostring(Spells[a].scale or a)
+		b2 = tostring(Spells[b].scale or b)
+		a3 = tostring(Spells[a].name or a)
+		b3 = tostring(Spells[b].name or b)
+	 if a1 < b1 then return true end
+	 if a1 > b1 then return false end
+	 if a2 > b2 then return true end
+	 if a2 < b2 then return false end
+		 return a3 < b3
 	 end
 end
 
@@ -126,6 +181,7 @@ function fPB.BuildNPCList()
 	end
 	table_sort(spellList, cmp_col1)
 	table_sort(spellList, cmp_col1_col2)
+	table_sort(spellList, cmp_col1_col2_col3)
 	for i = 1, #spellList do
 		local s = spellList[i]
 		local Spell = Spells[s]
@@ -306,13 +362,55 @@ function fPB.BuildSpellList()
 	end
 	table_sort(spellList, cmp_col1)
 	table_sort(spellList, cmp_col1_col2)
+	table_sort(spellList, cmp_col1_col2_col3)
 	for i = 1, #spellList do
 		local s = spellList[i]
 		local Spell = Spells[s]
 		local name = Spell.name and Spell.name or (GetSpellInfo(s) and GetSpellInfo(s) or tostring(s))
 		local spellId = Spell.spellId
 		if Spell.show == 1 then
-			color = "|cFF00FF00" --green
+			if Spell.DEATHKNIGHT then
+				local hexColor = hexFontColors["DEATHKNIGHT"]
+				color = "|c" .. hexColor
+			elseif	Spell.DEMONHUNTER then
+				local hexColor = hexFontColors["DEMONHUNTER"]
+				color = "|c" .. hexColor
+			elseif	Spell.DRUID then
+				local hexColor = hexFontColors["DRUID"]
+				color = "|c" .. hexColor
+			elseif	Spell.EVOKER then
+				local hexColor = hexFontColors["EVOKER"]
+				color = "|c" .. hexColor
+			elseif	Spell.HUNTER then
+				local hexColor = hexFontColors["HUNTER"]
+				color = "|c" .. hexColor
+			elseif	Spell.MAGE then
+				local hexColor = hexFontColors["MAGE"]
+				color = "|c" .. hexColor
+			elseif	Spell.MONK then
+				local hexColor = hexFontColors["MONK"]
+				color = "|c" .. hexColor
+			elseif	Spell.PALADIN then
+				local hexColor = hexFontColors["PALADIN"]
+				color = "|c" .. hexColor
+			elseif	Spell.PRIEST then
+				local hexColor = hexFontColors["PRIEST"]
+				color = "|c" .. hexColor
+			elseif	Spell.ROGUE then
+				local hexColor = hexFontColors["ROGUE"]
+				color = "|c" .. hexColor
+			elseif	Spell.SHAMAN then
+				local hexColor = hexFontColors["SHAMAN"]
+				color = "|c" .. hexColor
+			elseif	Spell.WARLOCK then
+				local hexColor = hexFontColors["WARLOCK"]
+				color = "|c" .. hexColor
+			elseif	Spell.WARRIOR then
+				local hexColor = hexFontColors["WARRIOR"]
+				color = "|c" .. hexColor
+			else
+				color = "|cFF00FF00" --green
+			end
 		elseif Spell.show == 3 then
 			color = "|cFFFF0000" --red
 		else
@@ -322,13 +420,17 @@ function fPB.BuildSpellList()
 		iconTexture = TextureString(spellId)
 
 		if tonumber(spellId) then
-			tooltip:SetHyperlink("spell:"..spellId)
-			local lines = tooltip:NumLines()
-			if lines > 0 then
-				spellDesc = _G["fPBScanSpellDescTooltipTextLeft"..lines]:GetText() or "??"
+		local tooltipData =  C_TooltipInfo.GetHyperlink("spell:"..spellId)
+			if tooltipData then 
+				TooltipUtil.SurfaceArgs(tooltipData)
+				if tooltipData.lines and tooltipData.lines[4] then 
+				 	spellDesc = L[tooltipData.lines[4].leftText]
+				else
+					spellDesc = L["No spell ID"]
+				end
+			else
+				spellDesc = L["No spell ID"]
 			end
-		else
-			spellDesc = L["No spell ID"]
 		end
 
 		local buildName
@@ -492,6 +594,569 @@ function fPB.BuildSpellList()
 					max = 60,
 					step = 1,
 				},
+				break3 = {
+					order = 13,
+					type = "header",
+					name = L["Select if the Spell Belongs to a Class for Sorting"],
+				},
+				DEATHKNIGHT = {
+					order = 14,
+					type = "toggle",
+					name = format("%s %s", GetIconString(classIcons["DEATHKNIGHT"], 15), Colorize(LOCALIZED_CLASS_NAMES_MALE["DEATHKNIGHT"], "DEATHKNIGHT")),
+					get = function(info)
+						return Spell.DEATHKNIGHT
+					end,
+					set = function(info, value)
+						if value then 
+							Spell.class = "DEATHKNIGHT"
+							Spell.DEATHKNIGHT = true
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						else
+
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						end
+						fPB.BuildSpellList()
+					
+					end,
+				},
+				DEMONHUNTER = {
+					order = 15,
+					type = "toggle",
+					name = format("%s %s", GetIconString(classIcons["DEMONHUNTER"], 15), Colorize(LOCALIZED_CLASS_NAMES_MALE["DEMONHUNTER"], "DEMONHUNTER")),
+					get = function(info)
+						return Spell.DEMONHUNTER
+					end,
+					set = function(info, value)
+						if value then 
+							Spell.class = "DEMONHUNTER"
+							Spell.DEMONHUNTER = true
+							Spell.DEATHKNIGHT = false
+
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						else
+							Spell.DEATHKNIGHT = false
+
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						end
+						fPB.BuildSpellList()
+					
+					end,
+				},
+				DRUID = {
+					order = 16,
+					type = "toggle",
+					name = format("%s %s", GetIconString(classIcons["DRUID"], 15), Colorize(LOCALIZED_CLASS_NAMES_MALE["DRUID"], "DRUID")),
+					get = function(info)
+						return Spell.DRUID
+					end,
+					set = function(info, value)
+						if value then 
+							Spell.class = "DRUID"
+							Spell.DRUID = true
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						else
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						end
+						fPB.BuildSpellList()
+						
+					end,
+				},
+				EVOKER = {
+					order = 16,
+					type = "toggle",
+					name = format("%s %s", GetIconString(classIcons["EVOKER"], 15), Colorize(LOCALIZED_CLASS_NAMES_MALE["EVOKER"], "EVOKER")),
+					get = function(info)
+						return Spell.EVOKER
+					end,
+					set = function(info, value)
+						if value then 
+							Spell.class = "EVOKER"
+							Spell.EVOKER = true
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						else
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						end
+						fPB.BuildSpellList()
+						
+					end,
+				},
+				HUNTER = {
+					order = 16,
+					type = "toggle",
+					name = format("%s %s", GetIconString(classIcons["HUNTER"], 15), Colorize(LOCALIZED_CLASS_NAMES_MALE["HUNTER"], "HUNTER")),
+					get = function(info)
+						return Spell.HUNTER
+					end,
+					set = function(info, value)
+						if value then 
+							Spell.class = "HUNTER"
+							Spell.HUNTER = true
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						else
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						end
+						fPB.BuildSpellList()
+						
+					end,
+				},
+				MAGE = {
+					order = 16,
+					type = "toggle",
+					name = format("%s %s", GetIconString(classIcons["MAGE"], 15), Colorize(LOCALIZED_CLASS_NAMES_MALE["MAGE"], "MAGE")),
+					get = function(info)
+						return Spell.MAGE
+					end,
+					set = function(info, value)
+						if value then 
+							Spell.class = "MAGE"
+							Spell.MAGE = true
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						else
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						end
+						fPB.BuildSpellList()
+						
+					end,
+				},
+				MONK = {
+					order = 16,
+					type = "toggle",
+					name = format("%s %s", GetIconString(classIcons["MONK"], 15), Colorize(LOCALIZED_CLASS_NAMES_MALE["MONK"], "MONK")),
+					get = function(info)
+						return Spell.MONK
+					end,
+					set = function(info, value)
+						if value then 
+							Spell.class = "MONK"
+							Spell.MONK = true
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						else
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						end
+						fPB.BuildSpellList()
+						
+					end,
+				},
+				PALADIN = {
+					order = 16,
+					type = "toggle",
+					name = format("%s %s", GetIconString(classIcons["PALADIN"], 15), Colorize(LOCALIZED_CLASS_NAMES_MALE["PALADIN"], "PALADIN")),
+					get = function(info)
+						return Spell.PALADIN
+					end,
+					set = function(info, value)
+						if value then 
+							Spell.class = "PALADIN"
+							Spell.PALADIN = true
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						else
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						end
+						fPB.BuildSpellList()
+						
+					end,
+				},
+				PRIEST = {
+					order = 16,
+					type = "toggle",
+					name = format("%s %s", GetIconString(classIcons["PRIEST"], 15), Colorize(LOCALIZED_CLASS_NAMES_MALE["PRIEST"], "PRIEST")),
+					get = function(info)
+						return Spell.PRIEST
+					end,
+					set = function(info, value)
+						if value then 
+							Spell.class = "PRIEST"
+							Spell.PRIEST = true
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						else
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						end
+						fPB.BuildSpellList()
+					
+					end,
+				},
+				ROGUE = {
+					order = 16,
+					type = "toggle",
+					name = format("%s %s", GetIconString(classIcons["ROGUE"], 15), Colorize(LOCALIZED_CLASS_NAMES_MALE["ROGUE"], "ROGUE")),
+					get = function(info)
+						return Spell.ROGUE
+					end,
+					set = function(info, value)
+						if value then 
+							Spell.class = "ROGUE"
+							Spell.ROGUE = true
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						else
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						end
+						fPB.BuildSpellList()
+						
+					end,
+				},
+				SHAMAN = {
+					order = 16,
+					type = "toggle",
+					name = format("%s %s", GetIconString(classIcons["SHAMAN"], 15), Colorize(LOCALIZED_CLASS_NAMES_MALE["SHAMAN"], "SHAMAN")),
+					get = function(info)
+						return Spell.SHAMAN
+					end,
+					set = function(info, value)
+						if value then 
+							Spell.class = "SHAMAN"
+							Spell.SHAMAN = true
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						else
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							
+							Spell.WARLOCK = false
+							Spell.WARRIOR = false
+						end
+						fPB.BuildSpellList()
+						
+					end,
+				},
+				WARLOCK = {
+					order = 16,
+					type = "toggle",
+					name = format("%s %s", GetIconString(classIcons["WARLOCK"], 15), Colorize(LOCALIZED_CLASS_NAMES_MALE["WARLOCK"], "WARLOCK")),
+					get = function(info)
+						return Spell.WARLOCK
+					end,
+					set = function(info, value)
+						if value then 
+							Spell.class = "WARLOCK"
+							Spell.WARLOCK = true
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							
+							Spell.WARRIOR = false
+						else
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							
+							Spell.WARRIOR = false
+						end
+						fPB.BuildSpellList()
+						
+					end,
+				},
+				WARRIOR = {
+					order = 16,
+					type = "toggle",
+					name = format("%s %s", GetIconString(classIcons["WARRIOR"], 15), Colorize(LOCALIZED_CLASS_NAMES_MALE["WARRIOR"], "WARRIOR")),
+					get = function(info)
+						return Spell.WARRIOR
+					end,
+					set = function(info, value)
+						if value then 
+							Spell.class = "WARRIOR"
+							Spell.WARRIOR = true
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+						else
+							Spell.DEATHKNIGHT = false
+							Spell.DEMONHUNTER = false
+							Spell.DRUID = false
+							Spell.EVOKER = false
+							Spell.HUNTER = false
+							Spell.MAGE = false
+							Spell.MONK = false
+							Spell.PALADIN = false
+							Spell.PRIEST = false
+							Spell.ROGUE = false
+							Spell.SHAMAN = false
+							Spell.WARLOCK = false
+							
+						end
+						fPB.BuildSpellList()
+						
+					end,
+				},
+				
 			},
 		}
 	end
