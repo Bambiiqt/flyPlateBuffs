@@ -484,7 +484,7 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 			local _, _, c, _, d, e, _, _, _, s = UnitAura(nameplateID, id, type)
 			if not s then break end
 			if s == 382148 then
-				count = c
+				stack = c
 			end
 		end
 	end

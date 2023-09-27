@@ -588,7 +588,7 @@ function fPB.BuildSpellList()
 					order = 11,
 					type = "toggle",
 					name = L["Disable Aura"],
-					desc = L["Disables the Aura Check, Only Checks the Combat Log"],
+					desc = L["Disables the Aura Check, Only Checks the Combat Log, this will Require Interrupt, Summoned or Casted Aura also be Enabled"],
 				},
 				spellTypeInterrupt = {
 					order = 11,
