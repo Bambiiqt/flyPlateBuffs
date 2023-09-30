@@ -1164,24 +1164,44 @@ local function Nameplate_Added(...)
 		local spawnEpochOffset = bit_band(tonumber(substring(spawnUID, 5), 16), 0x7fffff)
 		local spawnTime = spawnEpoch + spawnEpochOffset
 		local nameCreature = UnitName(nameplateID)
-		local type = "HARMFUL"
+		local type,  debufftype
+		if UnitIsEnemy("player" , nameplateID) then 
+			type = "HARMFUL"
+			debufftype = "none"
+		else
+			type = "HELPFUL"
+			debufftype = "Buff"
+		end
 		local duration, expiration, icon, scale, tracked, seen
 		local stack = 0
-		local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
-		if unitType == "Creature" or unitType == "Vehicle" then scale = 1.3 elseif unitType =="Pet" then scale = 1.1 end
-		local durationSize = 10
-		local stackSize = 10
+		-- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
+		--if unitType == "Creature" or unitType == "Vehicle" then scale = 1.3 elseif unitType =="Pet" then scale = 1.1 end
+		local durationSize 
+		local stackSize 
 		local id = 1 --Need to figure this out
 		local upTime = tonumber((GetServerTime() % 2^23) - (spawnTime % 2^23))
 		--print(nameCreature.." "..unitType..":"..ID.." alive for: "..((GetServerTime() % 2^23) - (spawnTime % 2^23)))
-		if creatureId[tonumber(ID)] then
-			duration = creatureId[tonumber(ID)][1]
-			icon = creatureId[tonumber(ID)][2]
+
+		local Spells = db.Spells
+		local listedSpell
+
+
+		if Spells[ID] and not db.ignoredDefaultSpells[ID] then
+			listedSpell = Spells[ID]
+		elseif Spells[nameCreature] and not db.ignoredDefaultSpells[ID] then
+			listedSpell = Spells[nameCreature]
 		end
-		if creatureId[nameCreature] then
-			duration = creatureId[nameCreature][1]
-			icon =  creatureId[nameCreature][2]
+
+		if listedSpell and listedSpell.spellTypeNPC then
+			scale = listedSpell.scale  or 1
+			durationSize = listedSpell.durationSize or 13
+			stackSize = listedSpell.stackSize or 10
+			icon = listedSpell.spellId or 134400
+			duration = listedSpell.durationCLEU or 1
+		else 
+			
 		end
+
 		if icon then
 			expiration = GetTime() + (duration - upTime)
 			if not Interrupted[guid] then
@@ -1840,6 +1860,8 @@ function fPB:CLEU()
 		end
 	end
 
+	local isAlly, EnemyBuff
+
 	-----------------------------------------------------------------------------------------------------------------
 	--Summoned Spells Check
 	-----------------------------------------------------------------------------------------------------------------
@@ -1851,7 +1873,6 @@ function fPB:CLEU()
 			local duration = listedSpell.durationCLEU or 1
 			local type = "HELPFUL"
 			local namePrint, _, icon = GetSpellInfo(spellId)
-			local EnemyBuff
 			if listedSpell.RedifEnemy and not isAlly then EnemyBuff = true end
 			if spellId == 321686 then --Mirror Image Icon Change
 				icon = 135994
@@ -1918,37 +1939,44 @@ function fPB:CLEU()
 	-----------------------------------------------------------------------------------------------------------------
 	--Casted  CDs w/o Aura (fury of Elune)
 	-----------------------------------------------------------------------------------------------------------------
-	if (event == "SPELL_CAST_SUCCESS") and (spellId == 202770 or spellId == 202359)  then --Casted  CDs w/o Aura 
-		if castedAuraIds[spellId] and sourceGUID and (bit_band(sourceFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE) then
-			local guid = destGUID
-			local duration = castedAuraIds[spellId]
-			local type = "HARMFUL"
+	if (event == "SPELL_CAST_SUCCESS") then 
+		if listedSpell and listedSpell.spellTypeCastedAuras then
+			if sourceGUID and (bit_band(sourceFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE) then isAlly = false else isAlly = true end
+			local duration = listedSpell.durationCLEU or 1
+			local type = "HELPFUL"
 			local namePrint, _, icon = GetSpellInfo(spellId)
+			if listedSpell.RedifEnemy and not isAlly then EnemyBuff = true end
 			--print(sourceName.." Casted "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
+			local my = sourceGUID == UnitGUID("player")
 			local stack = 0
-			local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
+			local debufftype = "Buff" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
 			local expiration = GetTime() + duration
-			local scale = 1.3
-			local durationSize = 10
-			local stackSize = 10
+			local scale = listedSpell.scale
+			local durationSize = listedSpell.durationSize
+			local stackSize = listedSpell.stackSize
 			local id = 1 --Need to figure this out
 			if not Interrupted[sourceGUID] then
 				Interrupted[sourceGUID] = {}
 			end
-			local tablespot = #Interrupted[sourceGUID] + 1
-			tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID,  ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
-			UpdateAllNameplates()
-			Ctimer(duration, function()
-				if Interrupted[sourceGUID] then
-					for k, v in pairs(Interrupted[sourceGUID]) do
-						if v.spellId == spellId then
-							--print(v.sourceName.." Timed Out "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Timer")
-							Interrupted[sourceGUID][k] = nil
-							UpdateAllNameplates()
+			if(listedSpell.show == 1)
+			or(listedSpell.show == 2 and my)
+			or(listedSpell.show == 4 and isAlly)
+			or(listedSpell.show == 5 and not isAlly) then
+				local tablespot = #Interrupted[sourceGUID] + 1
+				tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemyBuff = EnemyBuff, sourceGUID = sourceGUID,  ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
+				UpdateAllNameplates()
+				Ctimer(duration, function()
+					if Interrupted[sourceGUID] then
+						for k, v in pairs(Interrupted[sourceGUID]) do
+							if v.spellId == spellId then
+								--print(v.sourceName.." Timed Out "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Timer")
+								Interrupted[sourceGUID][k] = nil
+								UpdateAllNameplates()
+							end
 						end
 					end
-				end
-			end)
+				end)
+			end
 		end
 	end
 
@@ -1957,68 +1985,10 @@ function fPB:CLEU()
 	-----------------------------------------------------------------------------------------------------------------
 	if (destGUID ~= nil) then --Channeled Kicks
 		if (event == "SPELL_CAST_SUCCESS") and not (event == "SPELL_INTERRUPT") then
-			if interruptsIds[spellId] then
-				local unit
-					for i = 1,  #C_NamePlate_GetNamePlates() do --Issue arrises if nameplates are not shown, you will not be able to capture the kick for channel
-						if (destGUID == UnitGUID("nameplate"..i)) then
-							unit = "nameplate"..i
-							break
-						end
-					end
-					for i = 1, 3 do
-						if (destGUID == UnitGUID("arena"..i)) then
-							unit = "arena"..i
-							break
-						end
-					end
-					if unit and (select(7, UnitChannelInfo(unit)) == false) then
-					local duration = interruptsIds[spellId]
-					if (duration ~= nil) then
-						duration = interruptDuration(destGUID, duration) or duration
-					end
-					local type = "HARMFUL"
-					local name, _, icon = GetSpellInfo(spellId)
-					local stack = 0
-					local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
-					local expiration = GetTime() + duration
-					local scale = 1.55
-					local durationSize = 10
-					local stackSize = 10
-					local id = 1 --Need to figure this out
-					if not Interrupted[destGUID] then
-						Interrupted[destGUID] = {}
-					end
-					local tablespot = #Interrupted[destGUID] + 1
-					local sourceGUID_Kick = true
-					for k, v in pairs(Interrupted[destGUID]) do
-						if v.icon == icon and v.sourceGUID == sourceGUID and ((expiration - v.expiration) < 1) then
-							--print("Regular Kick Spell Exists, kick used within: "..(expiration - v.expiration))
-							sourceGUID_Kick = nil -- the source already used his kick within a GCD on this destGUID
-							break
-						end
-					end
-					if sourceGUID_Kick then
-						--print(sourceName.." kicked "..(select(1, UnitChannelInfo(unit))).." channel cast w/ "..name.. " from "..destName)
-						tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID, ["spellSchool"] = spellSchool})
-						UpdateAllNameplates()
-						Ctimer(duration, function()
-							if Interrupted[destGUID] then
-								Interrupted[destGUID][tablespot] = nil
-								UpdateAllNameplates()
-							end
-						end)
-					end
-				end
-			end
-		end
-	end
-
-	-----------------------------------------------------------------------------------------------------------------
-	--Regular Casted Kicks
-	-----------------------------------------------------------------------------------------------------------------
-	if (destGUID ~= nil) then --Regular Casted Kicks
-		if (event == "SPELL_INTERRUPT") then
-			if interruptsIds[spellId] then
+			if listedSpell and listedSpell.spellTypeInterrupt then
+				local isFriendly
+				if destGUID and (bit_band(destFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE) then isAlly = false else isAlly = true end
+				if sourceGUID and (bit_band(sourceFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE) then isFriendly = false else isFriendly = true end
 				local unit
 				for i = 1,  #C_NamePlate_GetNamePlates() do --Issue arrises if nameplates are not shown, you will not be able to capture the kick for channel
 					if (destGUID == UnitGUID("nameplate"..i)) then
@@ -2032,41 +2002,118 @@ function fPB:CLEU()
 						break
 					end
 				end
-				local duration = interruptsIds[spellId]
+				if unit and (select(7, UnitChannelInfo(unit)) == false) then
+					local duration = listedSpell.durationCLEU or 1
+					if (duration ~= nil) then
+						duration = interruptDuration(destGUID, duration) or duration
+					end
+					local namePrint, _, icon = GetSpellInfo(spellId)
+					if listedSpell.RedifEnemy and not isFriendly then EnemyBuff = true end
+					--print(sourceName.." Casted "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
+					local my = sourceGUID == UnitGUID("player")
+					local stack = 0
+					local debufftype = "none"  -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
+					local expiration = GetTime() + duration
+					local scale = listedSpell.scale
+					local durationSize = listedSpell.durationSize
+					local stackSize = listedSpell.stackSize
+					local id = 1 --Need to figure this out
+					if not Interrupted[destGUID] then
+						Interrupted[destGUID] = {}
+					end
+					if(listedSpell.show == 1)
+						or(listedSpell.show == 2 and my)
+						or(listedSpell.show == 4 and isAlly)
+						or(listedSpell.show == 5 and not isAlly) then
+						local tablespot = #Interrupted[destGUID] + 1
+						local sourceGUID_Kick = true
+						for k, v in pairs(Interrupted[destGUID]) do
+							if v.icon == icon and v.sourceGUID == sourceGUID and ((expiration - v.expiration) < 1) then
+								--print("Regular Kick Spell Exists, kick used within: "..(expiration - v.expiration))
+								sourceGUID_Kick = nil -- the source already used his kick within a GCD on this destGUID
+								break
+							end
+						end
+						if sourceGUID_Kick then
+							--print(sourceName.." kicked "..(select(1, UnitChannelInfo(unit))).." channel cast w/ "..name.. " from "..destName)
+							tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype, duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemyBuff = EnemyBuff, sourceGUID = sourceGUID,  ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
+							Ctimer(duration, function()
+								if Interrupted[destGUID] then
+									Interrupted[destGUID][tablespot] = nil
+									UpdateAllNameplates()
+								end
+							end)
+						end
+					end
+				end
+			end
+		end
+	end
+
+	-----------------------------------------------------------------------------------------------------------------
+	--Regular Casted Kicks
+	-----------------------------------------------------------------------------------------------------------------
+	if (destGUID ~= nil) then --Regular Casted Kicks
+		if (event == "SPELL_INTERRUPT") then
+			if listedSpell and listedSpell.spellTypeInterrupt then
+				local isFriendly
+				if destGUID and (bit_band(destFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE) then isAlly = false else isAlly = true end
+				if sourceGUID and (bit_band(sourceFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE) then isFriendly = false else isFriendly = true end
+				local unit
+				for i = 1,  #C_NamePlate_GetNamePlates() do --Issue arrises if nameplates are not shown, you will not be able to capture the kick for channel
+					if (destGUID == UnitGUID("nameplate"..i)) then
+						unit = "nameplate"..i
+						break
+					end
+				end
+				for i = 1, 3 do
+					if (destGUID == UnitGUID("arena"..i)) then
+						unit = "arena"..i
+						break
+					end
+				end
+				local duration = listedSpell.durationCLEU or 1
 				if (duration ~= nil) then
 					duration = interruptDuration(destGUID, duration) or duration
 				end
-				local type = "HARMFUL"
-				local name, _, icon = GetSpellInfo(spellId)
+				local namePrint, _, icon = GetSpellInfo(spellId)
+				if listedSpell.RedifEnemy and not isFriendly then EnemyBuff = true end
+				--print(sourceName.." Casted "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
+				local my = sourceGUID == UnitGUID("player")
 				local stack = 0
-				local debufftype = "none" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
+				local debufftype = "none"  -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
 				local expiration = GetTime() + duration
-				local scale = 1.55
-				local durationSize = 10
-				local stackSize = 10
+				local scale = listedSpell.scale
+				local durationSize = listedSpell.durationSize
+				local stackSize = listedSpell.stackSize
 				local id = 1 --Need to figure this out
 				if not Interrupted[destGUID] then
 					Interrupted[destGUID] = {}
 				end
-				local tablespot = #Interrupted[destGUID] + 1
-				local sourceGUID_Kick = true
-				for k, v in pairs(Interrupted[destGUID]) do
-					if v.icon == icon and v.sourceGUID == sourceGUID and ((expiration - v.expiration) < 1) then
-						--print("Casted Kick Fired but Did Not Execute within: "..(expiration - v.expiration).." of Channel Kick Firing")
-						sourceGUID_Kick = nil -- the source already used his kick within a GCD on this destGUID
-						break
-					end
-				end
-				if sourceGUID_Kick then
-					--print(sourceName.." kicked cast w/ "..name.. " from "..destName)
-					tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, sourceGUID = sourceGUID, ["spellSchool"] = spellSchool})
-					UpdateAllNameplates()
-					Ctimer(duration, function()
-						if Interrupted[destGUID] then
-							Interrupted[destGUID][tablespot] = nil
-							UpdateAllNameplates()
+				if(listedSpell.show == 1)
+					or(listedSpell.show == 2 and my)
+					or(listedSpell.show == 4 and isAlly)
+					or(listedSpell.show == 5 and not isAlly) then
+					local tablespot = #Interrupted[destGUID] + 1
+					local sourceGUID_Kick = true
+					for k, v in pairs(Interrupted[destGUID]) do
+						if v.icon == icon and v.sourceGUID == sourceGUID and ((expiration - v.expiration) < 1) then
+							--print("Casted Kick Fired but Did Not Execute within: "..(expiration - v.expiration).." of Channel Kick Firing")
+							sourceGUID_Kick = nil -- the source already used his kick within a GCD on this destGUID
+							break
 						end
-					end)
+					end
+					if sourceGUID_Kick then
+						--print(sourceName.." kicked cast w/ "..name.. " from "..destName)
+						tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype, duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemyBuff = EnemyBuff, sourceGUID = sourceGUID,  ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
+						UpdateAllNameplates()
+						Ctimer(duration, function()
+							if Interrupted[destGUID] then
+								Interrupted[destGUID][tablespot] = nil
+								UpdateAllNameplates()
+							end
+						end)
+					end
 				end
 			end
 		end
