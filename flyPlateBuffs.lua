@@ -1155,7 +1155,7 @@ local function Nameplate_Added(...)
 			durationSize = listedSpell.durationSize or 13
 			stackSize = listedSpell.stackSize or 10
 			icon = listedSpell.spellId or 134400
-			duration = listedSpell.durationCLEU or 1
+			duration = listedSpell.durationCLEU or 0
 			glow = listedSpell.IconGlow
 		else 
 			
