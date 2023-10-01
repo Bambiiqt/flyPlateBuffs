@@ -9,8 +9,11 @@ local 	GetSpellInfo, tonumber, pairs, table_sort, table_insert =
 local	DISABLE = DISABLE
 local chatColor = fPB.chatColor
 local linkColor = fPB.linkColor
+local strfind = string.find
 
-
+local tooltip = CreateFrame("GameTooltip", "fPBScanSpellDescTooltip", UIParent, "GameTooltipTemplate")
+tooltip:Show()
+tooltip:SetOwner(UIParent, "ANCHOR_NONE")
 
 
 local minIconSize = 10
@@ -1328,7 +1331,7 @@ function fPB.BuildSpellList()
 
 		iconTexture = TextureString(spellId,Spell.IconId)
 
-		if tonumber(spellId) then
+		--[[if tonumber(spellId) then
 		local tooltipData =  C_TooltipInfo.GetHyperlink("spell:"..spellId)
 			if tooltipData then 
 				TooltipUtil.SurfaceArgs(tooltipData)
@@ -1337,6 +1340,28 @@ function fPB.BuildSpellList()
 				else
 					spellDesc = L["No spell ID"]
 				end
+			else
+				spellDesc = L["No spell ID"]
+			end
+		end]]
+
+		local lasttext
+		if tonumber(spellId) then
+			tooltip:SetHyperlink("spell:"..spellId)
+			local mytext 
+			local rightText
+			for i = 1 , tooltip:NumLines() do
+				mytext=_G["fPBScanSpellDescTooltipTextLeft"..i]; 
+				rightText=_G["fPBScanSpellDescTooltipTextRight"..i]; 
+				--print(mytext:GetText().." : "..(rightText:GetText() or "nil"))
+				if strfind(mytext:GetText(), "SpellID") then 
+					break 
+				end
+				lasttext = mytext
+			end
+			if lasttext then 
+				local text = lasttext:GetText()
+				spellDesc = text
 			else
 				spellDesc = L["No spell ID"]
 			end
