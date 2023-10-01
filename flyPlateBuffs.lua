@@ -317,7 +317,8 @@ local function DrawOnPlate(frame)
 	end
 end
 
-local function AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, spellId, EnemyBuff, scale, durationSize, stackSize)
+local function AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, spellId, EnemyBuff, scale, durationSize, stackSize, icon_override, glow)
+	if icon_override then icon = icon_override end
 	if not PlatesBuffs[frame] then PlatesBuffs[frame] = {} end
 	PlatesBuffs[frame][#PlatesBuffs[frame] + 1] = {
 		type = type,
@@ -332,6 +333,7 @@ local function AddBuff(frame, type, icon, stack, debufftype, duration, expiratio
 		id = id,
 		EnemyBuff = EnemyBuff,
 		spellId = spellId,
+		glow = glow
 	}
 end
 
@@ -489,57 +491,12 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		end
 	end
 
-	-----------------------------------------------------------------------------------------------------------------
-	--Debuff Icon Changes
-	-----------------------------------------------------------------------------------------------------------------
-	if spellId == 45524 then --Chains of Ice Dk
-		--icon = 463560
-		--icon = 236922
-		icon = 236925
-	end
 
-	if spellId == 334693 then --Abosolute Zero Frost Dk Legendary Stun
-		icon = 517161
-	end
-
-	if spellId == 317589 then --Mirros of Toremnt, Tormenting Backlash (Venthyr Mage) to Frost Jaw
-		icon = 538562
-	end
-
-	if spellId == 199845 then --Psyflay
-		icon = 537021
-	end
-
-	if spellId == 115196 then --Shiv
-		icon = 135428
-	end
-
-	if spellId == 285515 then --Frost Shock to Frost Nove
-		icon = 135848
-	end
 
 	-----------------------------------------------------------------------------------------------------------------
 	--Buff Icon Changes
 	-----------------------------------------------------------------------------------------------------------------
-	if spellId == 329543 then --Divine Ascension
-		icon = 2103871
-	end
 
-	if spellId == 328530 then --Divine Ascension
-		icon = 2103871
-	end
-
-	if spellId == 317929 then --Aura Mastery Cast Immune Pally
-		icon = 135863
-	end
-
-	if spellId == 199545 then --Steed of Glory Hack
-		icon = 135890
-	end
-
-	if spellId == 387636 then --Soulburn Healthstone
-		icon = 538745
-	end
 
 	if spellId == 363916 then --Obsidian Scales w/Mettles
 		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
@@ -646,7 +603,7 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		end
 		if (type == "HARMFUL" and (db.showDebuffs == 1 or ((db.showDebuffs == 2 or db.showDebuffs == 4) and my)))
 		or (type == "HELPFUL"   and (db.showBuffs   == 1 or ((db.showBuffs   == 2 or db.showBuffs   == 4) and my))) then
-			AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, spellId, EnemyBuff, nil, nil, nil)
+			AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, spellId, EnemyBuff, nil, nil, nil, nil, nil)
 			return
 		else
 			return
@@ -660,7 +617,7 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		or(listedSpell.show == 2 and my)
 		or(listedSpell.show == 4 and isAlly)
 		or(listedSpell.show == 5 and not isAlly)) and not listedSpell.spellDisableAura then
-			AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, spellId, EnemyBuff, listedSpell.scale, listedSpell.durationSize, listedSpell.stackSize)
+			AddBuff(frame, type, icon, stack, debufftype, duration, expiration, my, id, spellId, EnemyBuff, listedSpell.scale, listedSpell.durationSize, listedSpell.stackSize, listedSpell.IconId, listedSpell.IconGlow)
 			return
 		end
 	end
@@ -1060,6 +1017,7 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 		buffIcon.EnemyBuff = buff.EnemyBuff
 		buffIcon.spellId = buff.spellId
 		buffIcon.scale = buff.scale
+		buffIcon.glow = buff.glow
 
 		if updateOptions then
 			UpdateBuffIconOptions(buffIcon, buff)
@@ -1069,7 +1027,7 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 		-------------------------------------------------------------------------------------------------------------------
 		--Glow
 		-------------------------------------------------------------------------------------------------------------------
-		if buffIcon.spellId and (buffIcon.spellId == 199448) then -- or buffIcon.spellId == 377362) then --Ultimate Sac Glow
+		if buffIcon.glow then -- or buffIcon.spellId == 377362) then --Ultimate Sac Glow
 			ActionButton_ShowOverlayGlow(buffIcon, buff.scale)
 		else
 			ActionButton_HideOverlayGlow(buffIcon)
@@ -1172,7 +1130,7 @@ local function Nameplate_Added(...)
 			type = "HELPFUL"
 			debufftype = "Buff"
 		end
-		local duration, expiration, icon, scale, tracked, seen
+		local duration, expiration, icon, scale, tracked, seen, glow
 		local stack = 0
 		-- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
 		--if unitType == "Creature" or unitType == "Vehicle" then scale = 1.3 elseif unitType =="Pet" then scale = 1.1 end
@@ -1198,6 +1156,7 @@ local function Nameplate_Added(...)
 			stackSize = listedSpell.stackSize or 10
 			icon = listedSpell.spellId or 134400
 			duration = listedSpell.durationCLEU or 1
+			glow = listedSpell.IconGlow
 		else 
 			
 		end
@@ -1221,7 +1180,7 @@ local function Nameplate_Added(...)
 				end
 				--print(nameCreature.." "..unitType..":"..ID.." alive for: "..upTime)
 				local tablespot = #Interrupted[guid] + 1
-				tblinsert (Interrupted[guid], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, ["ID"] = ID})
+				tblinsert (Interrupted[guid], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, glow = glow, ["ID"] = ID})
 				if duration ~= 0 and duration - (GetServerTime() - spawnTime) > 0 then
 					Ctimer(duration - (GetServerTime() - spawnTime) , function()
 						if Interrupted[guid] then
@@ -1873,13 +1832,9 @@ function fPB:CLEU()
 			local duration = listedSpell.durationCLEU or 1
 			local type = "HELPFUL"
 			local namePrint, _, icon = GetSpellInfo(spellId)
+			if listedSpell.IconId then icon = listedSpell.IconId end
 			if listedSpell.RedifEnemy and not isAlly then EnemyBuff = true end
-			if spellId == 321686 then --Mirror Image Icon Change
-				icon = 135994
-			end
-			if spellId == 157299 then
-				icon = 2065626
-			end
+
 			local my = sourceGUID == UnitGUID("player")
 			local stack = 0
 			local debufftype = "Buff" -- Magic = {0.20,0.60,1.00},	Curse = {0.60,0.00,1.00} Disease = {0.60,0.40,0}, Poison= {0.00,0.60,0}, none = {0.80,0,   0}, Buff = {0.00,1.00,0},
@@ -1887,6 +1842,7 @@ function fPB:CLEU()
 			local scale = listedSpell.scale
 			local durationSize = listedSpell.durationSize
 			local stackSize = listedSpell.stackSize
+			local glow = listedSpell.IconGlow
 			local id = 1 --Need to figure this out
 			if not Interrupted[sourceGUID] then
 				Interrupted[sourceGUID] = {}
@@ -1897,7 +1853,7 @@ function fPB:CLEU()
 			or(listedSpell.show == 5 and not isAlly) then
 				--print(sourceName.." Summoned "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
 				local tablespot = #Interrupted[sourceGUID] + 1
-				tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemyBuff = EnemyBuff, sourceGUID = sourceGUID,  ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
+				tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemyBuff = EnemyBuff, sourceGUID = sourceGUID, glow = glow, ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
 				UpdateAllNameplates()
 				local ticker = 1
 				Ctimer(duration, function()
@@ -1945,6 +1901,7 @@ function fPB:CLEU()
 			local duration = listedSpell.durationCLEU or 1
 			local type = "HELPFUL"
 			local namePrint, _, icon = GetSpellInfo(spellId)
+			if listedSpell.IconId then icon = listedSpell.IconId end
 			if listedSpell.RedifEnemy and not isAlly then EnemyBuff = true end
 			--print(sourceName.." Casted "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
 			local my = sourceGUID == UnitGUID("player")
@@ -1954,6 +1911,7 @@ function fPB:CLEU()
 			local scale = listedSpell.scale
 			local durationSize = listedSpell.durationSize
 			local stackSize = listedSpell.stackSize
+			local glow = listedSpell.IconGlow
 			local id = 1 --Need to figure this out
 			if not Interrupted[sourceGUID] then
 				Interrupted[sourceGUID] = {}
@@ -1963,7 +1921,7 @@ function fPB:CLEU()
 			or(listedSpell.show == 4 and isAlly)
 			or(listedSpell.show == 5 and not isAlly) then
 				local tablespot = #Interrupted[sourceGUID] + 1
-				tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemyBuff = EnemyBuff, sourceGUID = sourceGUID,  ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
+				tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemyBuff = EnemyBuff, sourceGUID = sourceGUID, glow = glow, ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
 				UpdateAllNameplates()
 				Ctimer(duration, function()
 					if Interrupted[sourceGUID] then
@@ -2008,6 +1966,7 @@ function fPB:CLEU()
 						duration = interruptDuration(destGUID, duration) or duration
 					end
 					local namePrint, _, icon = GetSpellInfo(spellId)
+					if listedSpell.IconId then icon = listedSpell.IconId end
 					if listedSpell.RedifEnemy and not isFriendly then EnemyBuff = true end
 					--print(sourceName.." Casted "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
 					local my = sourceGUID == UnitGUID("player")
@@ -2017,6 +1976,7 @@ function fPB:CLEU()
 					local scale = listedSpell.scale
 					local durationSize = listedSpell.durationSize
 					local stackSize = listedSpell.stackSize
+					local glow = listedSpell.IconGlow
 					local id = 1 --Need to figure this out
 					if not Interrupted[destGUID] then
 						Interrupted[destGUID] = {}
@@ -2036,7 +1996,7 @@ function fPB:CLEU()
 						end
 						if sourceGUID_Kick then
 							--print(sourceName.." kicked "..(select(1, UnitChannelInfo(unit))).." channel cast w/ "..name.. " from "..destName)
-							tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype, duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemyBuff = EnemyBuff, sourceGUID = sourceGUID,  ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
+							tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype, duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemyBuff = EnemyBuff, sourceGUID = sourceGUID, glow = glow,  ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
 							Ctimer(duration, function()
 								if Interrupted[destGUID] then
 									Interrupted[destGUID][tablespot] = nil
@@ -2077,6 +2037,7 @@ function fPB:CLEU()
 					duration = interruptDuration(destGUID, duration) or duration
 				end
 				local namePrint, _, icon = GetSpellInfo(spellId)
+				if listedSpell.IconId then icon = listedSpell.IconId end
 				if listedSpell.RedifEnemy and not isFriendly then EnemyBuff = true end
 				--print(sourceName.." Casted "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
 				local my = sourceGUID == UnitGUID("player")
@@ -2086,6 +2047,7 @@ function fPB:CLEU()
 				local scale = listedSpell.scale
 				local durationSize = listedSpell.durationSize
 				local stackSize = listedSpell.stackSize
+				local glow = listedSpell.IconGlow
 				local id = 1 --Need to figure this out
 				if not Interrupted[destGUID] then
 					Interrupted[destGUID] = {}
@@ -2105,7 +2067,7 @@ function fPB:CLEU()
 					end
 					if sourceGUID_Kick then
 						--print(sourceName.." kicked cast w/ "..name.. " from "..destName)
-						tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype, duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemyBuff = EnemyBuff, sourceGUID = sourceGUID,  ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
+						tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype, duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemyBuff = EnemyBuff, sourceGUID = sourceGUID, glow = glow, ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
 						UpdateAllNameplates()
 						Ctimer(duration, function()
 							if Interrupted[destGUID] then

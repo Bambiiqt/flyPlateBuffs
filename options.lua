@@ -89,11 +89,15 @@ local color
 local iconTexture
 local TextureStringCache = {}
 local description
-local function TextureString(spellId)
+local function TextureString(spellId, IconId)
 	if not tonumber(spellId) then
 		return "\124TInterface\\Icons\\Inv_misc_questionmark:0\124t"
 	else
-		_,_,iconTexture = GetSpellInfo(spellId)
+		if IconId then 
+			iconTexture = IconId
+		else
+			_,_,iconTexture =  GetSpellInfo(spellId)
+		end
 		if iconTexture then
 			iconTexture = "\124T"..iconTexture..":0\124t"
 			return iconTexture
@@ -263,8 +267,21 @@ function fPB.BuildNPCList()
 		end
 		spellDesc = L["NPC ID"]
 
+		local red
+		local glw
 
-		local buildName = (Spell.scale or "1").." ".. iconTexture.." "..color..name
+		if Spell.RedifEnemy then
+			local color = "|c" .."FF822323"
+			red = color.."r"
+		end
+		if Spell.IconGlow then
+			local color = "|c" .."FFEAD516"
+			glw = color.."g"
+		end
+
+
+		local buildName = (Spell.scale or "1").." ".. iconTexture..(red or "")..(glw or "").." "..color..name
+
 		buildName = buildName.."|r"
 
 
@@ -318,28 +335,28 @@ function fPB.BuildNPCList()
 					step = 1,
 				},
 				spellId = {
-						order = 5,
-						type = "input",
-						name = L["Icon ID"],
-						get = function(info)
-							return Spell.spellId and tostring(Spell.spellId) or L["No spell ID"]
-						end,
-						set = function(info, value)
-							if value then
-								local spellId = tonumber(value)
-								db.Spells[s].spellId = spellId
-								DEFAULT_CHAT_FRAME:AddMessage(chatColor..L[" Icon changed "].."|r"..(db.Spells[s].spellId  or "nil")..chatColor.." -> |r"..spellId)
-								UpdateAllNameplates(true)
-								fPB.BuildNPCList()
-							end
-						end,
-					},
-					blank = {
-						order = 2,
-						type = "description",
-						name = "",
-						width = "normal",
-					},
+					order = 5,
+					type = "input",
+					name = L["Icon ID"],
+					get = function(info)
+						return Spell.spellId and tostring(Spell.spellId) or L["No spell ID"]
+					end,
+					set = function(info, value)
+						if value then
+							local spellId = tonumber(value)
+							db.Spells[s].spellId = spellId
+							DEFAULT_CHAT_FRAME:AddMessage(chatColor..L[" Icon changed "].."|r"..(db.Spells[s].spellId  or "nil")..chatColor.." -> |r"..spellId)
+							UpdateAllNameplates(true)
+							fPB.BuildNPCList()
+						end
+					end,
+				},
+				blank = {
+					order = 2,
+					type = "description",
+					name = "",
+					width = "normal",
+				},
 				removeSpell = {
 					order = 7,
 					type = "execute",
@@ -348,6 +365,17 @@ function fPB.BuildNPCList()
 					func = function(info)
 						fPB.RemoveSpell(s)
 					end,
+				},
+				break2 = {
+					order = 7.5,
+					type = "header",
+					name = L["Icon Settings"],
+				},
+				IconGlow= {
+					order = 8,
+					type = "toggle",
+					name = L["Glow"],
+					desc = L["Gives the icon a Glow"],
 				},
 				break3 = {
 					order = 13,
@@ -1294,7 +1322,7 @@ function fPB.BuildSpellList()
 			color = "|cFFFFFF00" --yellow
 		end
 
-		iconTexture = TextureString(spellId)
+		iconTexture = TextureString(spellId,Spell.IconId)
 
 		if tonumber(spellId) then
 		local tooltipData =  C_TooltipInfo.GetHyperlink("spell:"..spellId)
@@ -1310,12 +1338,29 @@ function fPB.BuildSpellList()
 			end
 		end
 
+		local red
+		local glw
+
+		if Spell.RedifEnemy then
+			local color = "|c" .."FFFF0505"
+			red = color.."r"
+		end
+		if Spell.IconGlow then
+			local color = "|c" .."FFEAD516"
+			glw = color.."g"
+		end
+
+
+
 		local buildName
 		if Spell.spellTypeSummon or Spell.spellTypeCastedAuras or Spell.spellTypeInterrupt then
-			buildName = (Spell.scale or "1").." ".. iconTexture.." "..color..">>"..name.."<<"
+			buildName = (Spell.scale or "1").." ".. iconTexture..(red or "")..(glw or "").." "..color..">"..name.."<"
 		else
-			buildName = (Spell.scale or "1").." ".. iconTexture.." "..color..name
+			buildName = (Spell.scale or "1").." ".. iconTexture..(red or "")..(glw or "").." "..color..name
 		end
+
+
+
 		buildName = buildName.."|r"
 		spellTable[tostring(s)] = {
 			name = buildName,
@@ -1428,13 +1473,44 @@ function fPB.BuildSpellList()
 						UpdateAllNameplates()
 					end,
 				},
+
+				break2 = {
+					order = 7,
+					type = "header",
+					name = L["Icon Settings"],
+				},
+
+	
 				RedifEnemy = {
 					order = 7,
 					type = "toggle",
 					name = L["Red if Enemy"],
 					desc = L["Gives the icon a Red Hue indicating a Enemy Aura, Useful for SmokeBomb"],
 				},
-				break2 = {
+				IconGlow= {
+					order = 8,
+					type = "toggle",
+					name = L["Glow"],
+					desc = L["Gives the icon a Glow"],
+				},
+				IconId = {
+					order = 8.5,
+					type = "input",
+					name = format("%s %s", iconTexture, "Icon ID"),
+					get = function(info)
+						return Spell.IconId and tostring(Spell.IconId) or L["No Icon ID"]
+					end,
+					set = function(info, value)
+						if value then
+							local IconId = tonumber(value)
+							db.Spells[s].IconId = IconId
+							UpdateAllNameplates(true)
+							fPB.BuildSpellList()
+						end
+					end,
+				},
+
+				break4 = {
 					order = 10,
 					type = "header",
 					name = L["Spell Type if NOT Aura, Combat Log Events (Requires Timer Duration)"],
