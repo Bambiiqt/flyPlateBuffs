@@ -157,7 +157,7 @@ fPB.NPCTable = {
 		addSpell = {
 			order = 1,
 			type = "input",
-			name = L["Add new NPC to list"],
+			name = L["Add new NPC to list (All Changes May Require a Reload or for you to Spin your Camera"],
 			desc = L["Enter NPC ID or name (case sensitive)\nand press OK"],
 			set = function(info, value)
 				if value then
@@ -303,7 +303,11 @@ function fPB.BuildNPCList()
 				UpdateAllNameplates()
 			end,
 			args = {
-
+				blank0 = {
+					order = 1,
+					type = "description",
+					name = "All Changes May Require a Reload or for you to Spin your Camera",
+				},
 				scale = {
 					order = 1,
 					name = L["Icon scale"],
