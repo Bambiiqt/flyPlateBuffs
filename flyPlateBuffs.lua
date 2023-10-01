@@ -357,6 +357,9 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 			listedSpell = Spells[cachedID]
 		end
 	end
+	
+	if (listedSpell and (listedSpell.showBuff or listedSpell.showDebuff) and type == "HARMFUL") and listedSpell.showBuff then return end
+	if (listedSpell and (listedSpell.showBuff or listedSpell.showDebuff) and type == "HELPFUL") and listedSpell.showDebuff then return end
 
 	if listedSpell and listedSpell.RedifEnemy and caster and UnitIsEnemy("player", caster) then --still returns true for an enemy currently under mindcontrol I can add your fix.
 		EnemyBuff = true

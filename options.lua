@@ -417,7 +417,7 @@ function fPB.BuildNPCList()
 							Spell.PvP = false
 							Spell.PvE = false
 						else
-
+							Spell.DEATHKNIGHT = false
 							Spell.DEMONHUNTER = false
 							Spell.DRUID = false
 							Spell.EVOKER = false
@@ -430,9 +430,8 @@ function fPB.BuildNPCList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildNPCList()
@@ -469,7 +468,7 @@ function fPB.BuildNPCList()
 							Spell.PvE = false
 						else
 							Spell.DEATHKNIGHT = false
-
+							Spell.DEMONHUNTER = false
 							Spell.DRUID = false
 							Spell.EVOKER = false
 							Spell.HUNTER = false
@@ -481,9 +480,8 @@ function fPB.BuildNPCList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildNPCList()
@@ -521,7 +519,7 @@ function fPB.BuildNPCList()
 						else
 							Spell.DEATHKNIGHT = false
 							Spell.DEMONHUNTER = false
-							
+							Spell.DRUID = false
 							Spell.EVOKER = false
 							Spell.HUNTER = false
 							Spell.MAGE = false
@@ -532,9 +530,8 @@ function fPB.BuildNPCList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildNPCList()
@@ -573,7 +570,7 @@ function fPB.BuildNPCList()
 							Spell.DEATHKNIGHT = false
 							Spell.DEMONHUNTER = false
 							Spell.DRUID = false
-							
+							Spell.EVOKER = false
 							Spell.HUNTER = false
 							Spell.MAGE = false
 							Spell.MONK = false
@@ -583,9 +580,8 @@ function fPB.BuildNPCList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildNPCList()
@@ -625,7 +621,7 @@ function fPB.BuildNPCList()
 							Spell.DEMONHUNTER = false
 							Spell.DRUID = false
 							Spell.EVOKER = false
-							
+							Spell.HUNTER = false
 							Spell.MAGE = false
 							Spell.MONK = false
 							Spell.PALADIN = false
@@ -634,9 +630,8 @@ function fPB.BuildNPCList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildNPCList()
@@ -677,7 +672,7 @@ function fPB.BuildNPCList()
 							Spell.DRUID = false
 							Spell.EVOKER = false
 							Spell.HUNTER = false
-							
+							Spell.MAGE = false
 							Spell.MONK = false
 							Spell.PALADIN = false
 							Spell.PRIEST = false
@@ -685,9 +680,8 @@ function fPB.BuildNPCList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-							
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildNPCList()
@@ -729,16 +723,15 @@ function fPB.BuildNPCList()
 							Spell.EVOKER = false
 							Spell.HUNTER = false
 							Spell.MAGE = false
-							
+							Spell.MONK = false
 							Spell.PALADIN = false
 							Spell.PRIEST = false
 							Spell.ROGUE = false
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildNPCList()
@@ -781,15 +774,14 @@ function fPB.BuildNPCList()
 							Spell.HUNTER = false
 							Spell.MAGE = false
 							Spell.MONK = false
-							
+							Spell.PALADIN = false
 							Spell.PRIEST = false
 							Spell.ROGUE = false
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildNPCList()
@@ -833,14 +825,13 @@ function fPB.BuildNPCList()
 							Spell.MAGE = false
 							Spell.MONK = false
 							Spell.PALADIN = false
-							
+							Spell.PRIEST = false
 							Spell.ROGUE = false
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildNPCList()
@@ -885,13 +876,12 @@ function fPB.BuildNPCList()
 							Spell.MONK = false
 							Spell.PALADIN = false
 							Spell.PRIEST = false
-							
+							Spell.ROGUE = false
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildNPCList()
@@ -937,12 +927,11 @@ function fPB.BuildNPCList()
 							Spell.PALADIN = false
 							Spell.PRIEST = false
 							Spell.ROGUE = false
-							
+							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildNPCList()
@@ -989,11 +978,10 @@ function fPB.BuildNPCList()
 							Spell.PRIEST = false
 							Spell.ROGUE = false
 							Spell.SHAMAN = false
-							
+							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildNPCList()
@@ -1040,9 +1028,9 @@ function fPB.BuildNPCList()
 							Spell.ROGUE = false
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
-							
-							Spell.Racials = false
+							Spell.WARRIOR = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 							
 						end
@@ -1091,8 +1079,8 @@ function fPB.BuildNPCList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-							
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 							
 						end
@@ -1141,7 +1129,7 @@ function fPB.BuildNPCList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
+							Spell.PvP = false
 							Spell.Racials = false
 							Spell.PvE = false
 							
@@ -1191,9 +1179,9 @@ function fPB.BuildNPCList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
+							Spell.PvE = false
 							
 						end
 						fPB.BuildNPCList()
@@ -1369,6 +1357,8 @@ function fPB.BuildSpellList()
 
 		local red
 		local glw
+		local bff
+		local debff
 
 		if Spell.RedifEnemy then
 			local color = "|c" .."FFFF0505"
@@ -1378,14 +1368,21 @@ function fPB.BuildSpellList()
 			local color = "|c" .."FFEAD516"
 			glw = color.."g"
 		end
-
+		if Spell.showBuff then
+			local color = "|c" .."FF00FF15"
+			bff = color.."b"
+		end
+		if Spell.showDebuff then
+			local color = "|c" .."FFFF0000"
+			debff = color.."d"
+		end
 
 
 		local buildName
 		if Spell.spellTypeSummon or Spell.spellTypeCastedAuras or Spell.spellTypeInterrupt then
-			buildName = (Spell.scale or "1").." ".. iconTexture..(red or "")..(glw or "").." "..color..">"..name.."<"
+			buildName = (Spell.scale or "1").." ".. iconTexture..(red or "")..(glw or "")..(bff or "")..(debff or "").." "..color..">"..name.."<"
 		else
-			buildName = (Spell.scale or "1").." ".. iconTexture..(red or "")..(glw or "").." "..color..name
+			buildName = (Spell.scale or "1").." ".. iconTexture..(red or "")..(glw or "")..(bff or "")..(debff or "").." "..color..name
 		end
 
 
@@ -1508,10 +1505,44 @@ function fPB.BuildSpellList()
 					type = "header",
 					name = L["Icon Settings"],
 				},
-
-	
+				showBuff = {
+					order = 7.2,
+					type = "toggle",
+					name = L["Only Show if Buff"],
+					desc = L["Only shows the icon if it is a buff"],
+					get = function(info)
+						return Spell.showBuff
+					end,
+					set = function(info, value)
+						if value then 
+							Spell.showDebuff = false
+							Spell.showBuff = true
+						else
+							Spell.showBuff = false
+						end
+						fPB.BuildSpellList()
+					end,
+				},
+				showDebuff = {
+					order = 7.5,
+					type = "toggle",
+					name = L["Only Show if Debuff"],
+					desc = L["Only shows the icon if it is a debuff"],
+					get = function(info)
+						return Spell.showDebuff
+					end,
+					set = function(info, value)
+						if value then 
+							Spell.showDebuff = true
+							Spell.showBuff = false
+						else
+							Spell.showDebuff = false
+						end
+						fPB.BuildSpellList()
+					end,
+				},
 				RedifEnemy = {
-					order = 7,
+					order = 7.75,
 					type = "toggle",
 					name = L["Red if Enemy"],
 					desc = L["Gives the icon a Red Hue indicating a Enemy Aura, Useful for SmokeBomb"],
@@ -1609,7 +1640,7 @@ function fPB.BuildSpellList()
 							Spell.PvP = false
 							Spell.PvE = false
 						else
-
+							Spell.DEATHKNIGHT = false
 							Spell.DEMONHUNTER = false
 							Spell.DRUID = false
 							Spell.EVOKER = false
@@ -1622,9 +1653,8 @@ function fPB.BuildSpellList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildSpellList()
@@ -1661,7 +1691,7 @@ function fPB.BuildSpellList()
 							Spell.PvE = false
 						else
 							Spell.DEATHKNIGHT = false
-
+							Spell.DEMONHUNTER = false
 							Spell.DRUID = false
 							Spell.EVOKER = false
 							Spell.HUNTER = false
@@ -1673,9 +1703,8 @@ function fPB.BuildSpellList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildSpellList()
@@ -1713,7 +1742,7 @@ function fPB.BuildSpellList()
 						else
 							Spell.DEATHKNIGHT = false
 							Spell.DEMONHUNTER = false
-							
+							Spell.DRUID = false
 							Spell.EVOKER = false
 							Spell.HUNTER = false
 							Spell.MAGE = false
@@ -1724,9 +1753,8 @@ function fPB.BuildSpellList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildSpellList()
@@ -1765,7 +1793,7 @@ function fPB.BuildSpellList()
 							Spell.DEATHKNIGHT = false
 							Spell.DEMONHUNTER = false
 							Spell.DRUID = false
-							
+							Spell.EVOKER = false
 							Spell.HUNTER = false
 							Spell.MAGE = false
 							Spell.MONK = false
@@ -1775,9 +1803,8 @@ function fPB.BuildSpellList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildSpellList()
@@ -1817,7 +1844,7 @@ function fPB.BuildSpellList()
 							Spell.DEMONHUNTER = false
 							Spell.DRUID = false
 							Spell.EVOKER = false
-							
+							Spell.HUNTER = false
 							Spell.MAGE = false
 							Spell.MONK = false
 							Spell.PALADIN = false
@@ -1826,9 +1853,8 @@ function fPB.BuildSpellList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildSpellList()
@@ -1869,7 +1895,7 @@ function fPB.BuildSpellList()
 							Spell.DRUID = false
 							Spell.EVOKER = false
 							Spell.HUNTER = false
-							
+							Spell.MAGE = false
 							Spell.MONK = false
 							Spell.PALADIN = false
 							Spell.PRIEST = false
@@ -1877,9 +1903,8 @@ function fPB.BuildSpellList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-							
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildSpellList()
@@ -1921,16 +1946,15 @@ function fPB.BuildSpellList()
 							Spell.EVOKER = false
 							Spell.HUNTER = false
 							Spell.MAGE = false
-							
+							Spell.MONK = false
 							Spell.PALADIN = false
 							Spell.PRIEST = false
 							Spell.ROGUE = false
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildSpellList()
@@ -1973,15 +1997,14 @@ function fPB.BuildSpellList()
 							Spell.HUNTER = false
 							Spell.MAGE = false
 							Spell.MONK = false
-							
+							Spell.PALADIN = false
 							Spell.PRIEST = false
 							Spell.ROGUE = false
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildSpellList()
@@ -2025,14 +2048,13 @@ function fPB.BuildSpellList()
 							Spell.MAGE = false
 							Spell.MONK = false
 							Spell.PALADIN = false
-							
+							Spell.PRIEST = false
 							Spell.ROGUE = false
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildSpellList()
@@ -2077,13 +2099,12 @@ function fPB.BuildSpellList()
 							Spell.MONK = false
 							Spell.PALADIN = false
 							Spell.PRIEST = false
-							
+							Spell.ROGUE = false
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildSpellList()
@@ -2129,12 +2150,11 @@ function fPB.BuildSpellList()
 							Spell.PALADIN = false
 							Spell.PRIEST = false
 							Spell.ROGUE = false
-							
+							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildSpellList()
@@ -2181,11 +2201,10 @@ function fPB.BuildSpellList()
 							Spell.PRIEST = false
 							Spell.ROGUE = false
 							Spell.SHAMAN = false
-							
+							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 						end
 						fPB.BuildSpellList()
@@ -2232,9 +2251,9 @@ function fPB.BuildSpellList()
 							Spell.ROGUE = false
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
-							
-							Spell.Racials = false
+							Spell.WARRIOR = false
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 							
 						end
@@ -2283,8 +2302,8 @@ function fPB.BuildSpellList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-							
 							Spell.PvP = false
+							Spell.Racials = false
 							Spell.PvE = false
 							
 						end
@@ -2333,7 +2352,7 @@ function fPB.BuildSpellList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
+							Spell.PvP = false
 							Spell.Racials = false
 							Spell.PvE = false
 							
@@ -2383,9 +2402,9 @@ function fPB.BuildSpellList()
 							Spell.SHAMAN = false
 							Spell.WARLOCK = false
 							Spell.WARRIOR = false
-
-							Spell.Racials = false
 							Spell.PvP = false
+							Spell.Racials = false
+							Spell.PvE = false
 							
 						end
 						fPB.BuildSpellList()
