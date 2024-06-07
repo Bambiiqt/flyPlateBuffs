@@ -486,7 +486,7 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 	-----------------------------------------------------------------------------------------------------------------
 	if spellId == 12472 then
 		for i = 1, 40 do
-			local _, _, c, _, d, e, _, _, _, s = UnitAura(nameplateID, id, type)
+			local _, _, c, _, d, e, _, _, _, s = UnitAura(nameplateID, i, type)
 			if not s then break end
 			if s == 382148 then
 				stack = c
@@ -1854,7 +1854,7 @@ function fPB:CLEU()
 			or(listedSpell.show == 2 and my)
 			or(listedSpell.show == 4 and isAlly)
 			or(listedSpell.show == 5 and not isAlly) then
-				--print(sourceName.." Summoned "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
+				print(sourceName.." Summoned "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
 				local tablespot = #Interrupted[sourceGUID] + 1
 				tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemyBuff = EnemyBuff, sourceGUID = sourceGUID, glow = glow, ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
 				UpdateAllNameplates()
@@ -1930,7 +1930,7 @@ function fPB:CLEU()
 					if Interrupted[sourceGUID] then
 						for k, v in pairs(Interrupted[sourceGUID]) do
 							if v.spellId == spellId then
-								--print(v.sourceName.." Timed Out "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Timer")
+								print(v.sourceName.." Timed Out "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Timer")
 								Interrupted[sourceGUID][k] = nil
 								UpdateAllNameplates()
 							end
@@ -2022,19 +2022,7 @@ function fPB:CLEU()
 				local isFriendly
 				if destGUID and (bit_band(destFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE) then isAlly = false else isAlly = true end
 				if sourceGUID and (bit_band(sourceFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE) then isFriendly = false else isFriendly = true end
-				local unit
-				for i = 1,  #C_NamePlate_GetNamePlates() do --Issue arrises if nameplates are not shown, you will not be able to capture the kick for channel
-					if (destGUID == UnitGUID("nameplate"..i)) then
-						unit = "nameplate"..i
-						break
-					end
-				end
-				for i = 1, 3 do
-					if (destGUID == UnitGUID("arena"..i)) then
-						unit = "arena"..i
-						break
-					end
-				end
+
 				local duration = listedSpell.durationCLEU or 1
 				if (duration ~= nil) then
 					duration = interruptDuration(destGUID, duration) or duration
@@ -2069,7 +2057,7 @@ function fPB:CLEU()
 						end
 					end
 					if sourceGUID_Kick then
-						--print(sourceName.." kicked cast w/ "..name.. " from "..destName)
+						print(sourceName.." kicked cast w/ "..name.. " from "..destName)
 						tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype, duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemyBuff = EnemyBuff, sourceGUID = sourceGUID, glow = glow, ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
 						UpdateAllNameplates()
 						Ctimer(duration, function()
