@@ -1,8 +1,8 @@
 ﻿local AddonName, fPB = ...
 L = fPB.L
 
-local	C_NamePlate_GetNamePlateForUnit, C_NamePlate_GetNamePlates, CreateFrame, UnitDebuff, UnitBuff, UnitName, UnitIsUnit, UnitIsPlayer, UnitPlayerControlled, UnitIsEnemy, UnitIsFriend, GetSpellInfo, table_sort, strmatch, format, wipe, pairs, GetTime, math_floor =
-		C_NamePlate.GetNamePlateForUnit, C_NamePlate.GetNamePlates, CreateFrame, UnitDebuff, UnitBuff, UnitName, UnitIsUnit, UnitIsPlayer, UnitPlayerControlled, UnitIsEnemy, UnitIsFriend, GetSpellInfo, table.sort, strmatch, format, wipe, pairs, GetTime, math.floor
+local	C_NamePlate_GetNamePlateForUnit, C_NamePlate_GetNamePlates, CreateFrame, UnitName, UnitIsUnit, UnitIsPlayer, UnitPlayerControlled, UnitIsEnemy, UnitIsFriend, GetSpellInfo, table_sort, strmatch, format, wipe, pairs, GetTime, math_floor =
+		C_NamePlate.GetNamePlateForUnit, C_NamePlate.GetNamePlates, CreateFrame, UnitName, UnitIsUnit, UnitIsPlayer, UnitPlayerControlled, UnitIsEnemy, UnitIsFriend, GetSpellInfo, table.sort, strmatch, format, wipe, pairs, GetTime, math.floor
 
 local defaultSpells1, defaultSpells2 = fPB.defaultSpells1, fPB.defaultSpells2
 
@@ -18,9 +18,45 @@ local db
 
 local tooltip = CreateFrame("GameTooltip", "fPBMouseoverTooltip", UIParent, "GameTooltipTemplate")
 
-local fPBMainOptions
-local fPBSpellsList
-local fPBProfilesOptions
+local UnitAura = UnitAura
+if UnitAura == nil then
+  --- Deprecated in 10.2.5
+  UnitAura = function(unitToken, index, filter)
+		local aura = C_UnitAuras.GetAuraDataByIndex(unitToken, index, filter)
+		if not aura then
+			return nil;
+		end
+
+		return aura.name, aura.icon, aura.applications, aura.dispelName, aura.duration, aura.expirationTime, aura.sourceUnit, aura.isStealable, nil, aura.spellId
+	end
+end
+
+local UnitBuff = UnitBuff
+if UnitBuff == nil then
+  --- Deprecated in 10.2.5
+  UnitBuff = function(unitToken, index, filter)
+		local aura = C_UnitAuras.GetAuraDataByIndex(unitToken, index, filter)
+		if not aura then
+			return nil;
+		end
+
+		return aura.name, aura.icon, aura.applications, aura.dispelName, aura.duration, aura.expirationTime, aura.sourceUnit, aura.isStealable, nil, aura.spellId
+	end
+end
+
+local UnitDebuff = UnitDebuff
+if UnitDebuff == nil then
+  --- Deprecated in 10.2.5
+  UnitDebuff = function(unitToken, index, filter)
+		if not filter then filter = "HARMFUL"end
+		local aura = C_UnitAuras.GetAuraDataByIndex(unitToken, index, filter)
+		if not aura then
+			return nil;
+		end
+
+		return aura.name, aura.icon, aura.applications, aura.dispelName, aura.duration, aura.expirationTime, aura.sourceUnit, aura.isStealable, nil, aura.spellId
+	end
+end
 
 fPB.chatColor = "|cFFFFA500"
 fPB.linkColor = "|cff71d5ff"
@@ -205,7 +241,7 @@ local function Colorize(text, color)
 end
 
 local function Print(msg)
-    print(Colorize("FlyPlateBuffs", "logo") .. ": " .. msg)
+    print(Colorize("FlyPlateBuffs", "logo") .. " : " .. msg)
 end
 
 --timeIntervals
@@ -541,7 +577,7 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		if strfind(tooltipData.lines[2].leftText, "35") then
 			icon = 3610996
 		else
-			return 
+			
 		end
 	end
 
@@ -599,7 +635,7 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 
 	-- showDebuffs  1 = all, 2 = mine + spellList, 3 = only spellList, 4 = only mine, 5 = none
 	-- listedSpell.show  -- 1 = always, 2 = mine, 3 = never, 4 = on ally, 5 = on enemy
-
+	
 	if not listedSpell then
 		if db.hidePermanent and duration == 0 then
 			return
@@ -642,6 +678,7 @@ local function ScanUnitBuffs(nameplateID, frame)
 	id = 1
 	while UnitBuff(nameplateID,id) do
 		local name, icon, stack, debufftype, duration, expiration, caster, _, _, spellId = UnitBuff(nameplateID, id)
+		print(id.." "..name.." "..nameplateID)
 		FilterBuffs(isAlly, frame, "HELPFUL", name, icon, stack, debufftype, duration, expiration, caster, spellId, id, nameplateID)
 		id = id + 1
 	end
