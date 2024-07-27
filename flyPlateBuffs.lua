@@ -6,6 +6,9 @@ local	C_NamePlate_GetNamePlateForUnit, C_NamePlate_GetNamePlates, CreateFrame, U
 
 local defaultSpells1, defaultSpells2 = fPB.defaultSpells1, fPB.defaultSpells2
 
+local UnitAuraBySlot, UnitAuraSlots = UnitAuraBySlot, UnitAuraSlots
+local GetAuraDataBySlot, GetAuraDataByAuraInstanceID = C_UnitAuras and C_UnitAuras.GetAuraDataBySlot, C_UnitAuras and C_UnitAuras.GetAuraDataByAuraInstanceID
+
 local LSM = LibStub("LibSharedMedia-3.0")
 fPB.LSM = LSM
 local MSQ, Group
@@ -57,6 +60,39 @@ if UnitDebuff == nil then
 		return aura.name, aura.icon, aura.applications, aura.dispelName, aura.duration, aura.expirationTime, aura.sourceUnit, aura.isStealable, nil, aura.spellId
 	end
 end
+
+local ProcessAllUnitAuras
+ProcessAllUnitAuras = function(unitid, effect)
+    local _
+    local unit_auras = {}
+
+    local continuation_token
+    repeat
+      -- continuationToken is the first return value of UnitAuraSltos
+      local slots = { UnitAuraSlots(unitid, effect, BUFF_MAX_DISPLAY, continuation_token) }
+      continuation_token = slots[1]
+
+      for i = 2, #slots do
+        local aura = {}
+
+        aura.name, aura.icon, aura.applications, aura.debuffType, aura.duration, aura.expirationTime, aura.sourceUnit,
+          aura.isStealable, aura.nameplateShowPersonal, aura.spellId, aura.canApplyAura, aura.isBossAura, _, aura.nameplateShowAll =
+          UnitAuraBySlot(unitid, slots[i])
+      
+          local unit_aura_info = GetAuraDataBySlot(unitid, slots[i])   
+          if unit_aura_info then
+            aura.auraInstanceID = unit_aura_info.auraInstanceID
+            aura.UnitAuraInfo = unit_aura_info
+          end
+          
+          unit_auras[#unit_auras + 1] = aura
+          --Addon.Logging.Debug("Aura:", aura.name, "=> ID:", aura.spellId)
+      end
+    until continuation_token == nil
+
+    return unit_auras
+  end
+
 
 fPB.chatColor = "|cFFFFA500"
 fPB.linkColor = "|cff71d5ff"
@@ -521,11 +557,13 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 	--Two Buff Conditions Icy Veins Stacks
 	-----------------------------------------------------------------------------------------------------------------
 	if spellId == 12472 then
-		for i = 1, 40 do
-			local _, _, c, _, d, e, _, _, _, s = UnitAura(nameplateID, i, type)
-			if not s then break end
+		local unit_auras = ProcessAllUnitAuras(nameplateID, type)
+		for i = 1, #unit_auras do
+			local aura = unit_auras[i]
+			local _, _, c, _, d, e, _, _, _, s = aura.name, aura.icon, aura.applications, aura.debuffType, aura.duration, aura.expirationTime, aura.sourceUnit, aura.isStealable, aura.nameplateShowPersonal, aura.spellId, aura.canApplyAura, aura.isBossAura, _, aura.nameplateShowAll
 			if s == 382148 then
 				stack = c
+				break
 			end
 		end
 	end
@@ -667,33 +705,48 @@ local function ScanUnitBuffs(nameplateID, frame)
 	if PlatesBuffs[frame] then
 		wipe(PlatesBuffs[frame])
 	end
-	local isAlly = UnitIsFriend(nameplateID,"player")
-	local id = 1
-	while UnitDebuff(nameplateID,id) do
-		local name, icon, stack, debufftype, duration, expiration, caster, _, _, spellId = UnitDebuff(nameplateID, id)
+
+	local isAlly = UnitIsFriend(nameplateID, "player")
+
+	local unit_debuffs = ProcessAllUnitAuras(nameplateID, "HARMFUL")
+	for id = 1, #unit_debuffs do
+		local aura = unit_debuffs[id]
+		local name, icon, stack, debufftype, duration, expiration, caster, _, _, spellId = aura.name, aura.icon, aura.applications, aura.debuffType, aura.duration, aura.expirationTime, aura.sourceUnit, aura.isStealable, aura.nameplateShowPersonal, aura.spellId, aura.canApplyAura, aura.isBossAura, _, aura.nameplateShowAll
 		FilterBuffs(isAlly, frame, "HARMFUL", name, icon, stack, debufftype, duration, expiration, caster, spellId, id, nameplateID)
-		id = id + 1
 	end
 
-	id = 1
-	while UnitBuff(nameplateID,id) do
-		local name, icon, stack, debufftype, duration, expiration, caster, _, _, spellId = UnitBuff(nameplateID, id)
-		print(id.." "..name.." "..nameplateID)
+	local unit_buffs = ProcessAllUnitAuras(nameplateID, "HELPFUL")
+	for id = 1, #unit_buffs do
+		local aura = unit_buffs[id]
+		local name, icon, stack, debufftype, duration, expiration, caster, _, _, spellId = aura.name, aura.icon, aura.applications, aura.debuffType, aura.duration, aura.expirationTime, aura.sourceUnit, aura.isStealable, aura.nameplateShowPersonal, aura.spellId, aura.canApplyAura, aura.isBossAura, _, aura.nameplateShowAll
+		--print(id.." "..(name or "nil").." "..nameplateID.." "..tostring(isAlly))
 		FilterBuffs(isAlly, frame, "HELPFUL", name, icon, stack, debufftype, duration, expiration, caster, spellId, id, nameplateID)
-		id = id + 1
 	end
 end
 
 local function FilterUnits(nameplateID)
 
 	-- filter units
+
+	--print(UnitName(nameplateID).." UnitReaction "..tostring(UnitReaction(nameplateID,"player")))
+	--print(UnitName(nameplateID).." UnitIsFriend "..tostring(UnitIsFriend(nameplateID,"player")))
+
 	if UnitIsUnit(nameplateID,"player") then return true end
 	if UnitIsPlayer(nameplateID) and not db.showOnPlayers then return true end
 	if UnitPlayerControlled(nameplateID) and not UnitIsPlayer(nameplateID) and not db.showOnPets then return true end
 	if not UnitPlayerControlled(nameplateID) and not UnitIsPlayer(nameplateID) and not db.showOnNPC then return true end
 	if UnitIsEnemy(nameplateID,"player") and not db.showOnEnemy then return true end
-	if UnitIsFriend(nameplateID,"player") and not db.showOnFriend then return true end
-	if not UnitIsFriend(nameplateID,"player") and not UnitIsEnemy(nameplateID,"player") and not db.showOnNeutral then return true end
+	local Friend = UnitReaction(nameplateID,"player")
+	if Friend and (Friend == 5 or Friend == 6 or Friend == 7) then
+		Friend = true 
+	else	
+		Friend = false
+	end
+	if Friend and not db.showOnFriend then return true end
+	if not Friend and not UnitIsEnemy(nameplateID,"player") and not db.showOnNeutral then return true end
+
+	--if UnitIsFriend(nameplateID,"player") and not db.showOnFriend then return true end
+	--if not UnitIsFriend(nameplateID,"player") and not UnitIsEnemy(nameplateID,"player") and not db.showOnNeutral then return true end
 
 	return false
 end
@@ -968,6 +1021,7 @@ end
 local function UpdateUnitAuras(nameplateID,updateOptions)
 
 	local frame = C_NamePlate_GetNamePlateForUnit(nameplateID)
+
 	if frame then
 		frame.TPFrame  = _G["ThreatPlatesFrame" .. frame:GetName()]
 		frame.unitFrame   = _G[frame:GetName().."PlaterUnitFrame"]
@@ -1593,9 +1647,11 @@ local function interruptDuration(destGUID, duration)
 		local duration3 = duration
 		local shamTranquilAirBuff = false
 		local _, destClass = GetPlayerInfoByGUID(destGUID)
-		for i = 1, 120 do
-			local _, _, _, _, _, _, _, _, _, auxSpellId = UnitAura(unit, i, "HELPFUL")
-			if not auxSpellId then break end
+		
+	local unit_auras = ProcessAllUnitAuras(unit, "HELPFUL")
+	for i = 1, #unit_auras do
+		local aura = unit_auras[i]
+		local _, _, _, _, _, _, _, _, _, auxSpellId = aura.name, aura.icon, aura.applications, aura.debuffType, aura.duration, aura.expirationTime, aura.sourceUnit, aura.isStealable, aura.nameplateShowPersonal, aura.spellId, aura.canApplyAura, aura.isBossAura, _, aura.nameplateShowAll
 			if (destClass == "DRUID") then
 				if auxSpellId == 234084 then	-- Moon and Stars (Druid) [Interrupted Mechanic Duration -70% (stacks)]
 					duration = duration * 0.5
@@ -1607,9 +1663,10 @@ local function interruptDuration(destGUID, duration)
 				shamTranquilAirBuff = true
 			end
 		end
-		for i = 1, 120 do
-			local _, _, _, _, _, _, _, _, _, auxSpellId = UnitAura(unit, i, "HARMFUL")
-			if not auxSpellId then break end
+		local unit_auras = ProcessAllUnitAuras(unit, "HARMFUL")
+		for i = 1, #unit_auras do
+			local aura = unit_auras[i]
+			local _, _, _, _, _, _, _, _, _, auxSpellId = aura.name, aura.icon, aura.applications, aura.debuffType, aura.duration, aura.expirationTime, aura.sourceUnit, aura.isStealable, aura.nameplateShowPersonal, aura.spellId, aura.canApplyAura, aura.isBossAura, _, aura.nameplateShowAll
 			if auxSpellId == 372048 then	-- Oppressing Roar (Evoker) [Interrupted Mechanic Duration +30%/+50% (PvP/PvE) (stacks)]
 				if ArePvpTalentsActive() then
 					duration = duration * 1.3
@@ -1891,7 +1948,7 @@ function fPB:CLEU()
 			or(listedSpell.show == 2 and my)
 			or(listedSpell.show == 4 and isAlly)
 			or(listedSpell.show == 5 and not isAlly) then
-				print(sourceName.." Summoned "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
+				--print(sourceName.." Summoned "..namePrint.." "..substring(destGUID, -7).." for "..duration.." fPB")
 				local tablespot = #Interrupted[sourceGUID] + 1
 				tblinsert (Interrupted[sourceGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype,	duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemyBuff = EnemyBuff, sourceGUID = sourceGUID, glow = glow, ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
 				UpdateAllNameplates()
@@ -1967,7 +2024,7 @@ function fPB:CLEU()
 					if Interrupted[sourceGUID] then
 						for k, v in pairs(Interrupted[sourceGUID]) do
 							if v.spellId == spellId then
-								print(v.sourceName.." Timed Out "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Timer")
+								--print(v.sourceName.." Timed Out "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Timer")
 								Interrupted[sourceGUID][k] = nil
 								UpdateAllNameplates()
 							end
@@ -2094,7 +2151,7 @@ function fPB:CLEU()
 						end
 					end
 					if sourceGUID_Kick then
-						print(sourceName.." kicked cast w/ "..name.. " from "..destName)
+						--print(sourceName.." kicked cast w/ "..name.. " from "..destName)
 						tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype, duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemyBuff = EnemyBuff, sourceGUID = sourceGUID, glow = glow, ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
 						UpdateAllNameplates()
 						Ctimer(duration, function()
