@@ -740,8 +740,12 @@ local function ScanUnitBuffs(nameplateID, frame)
 	end
 
 	if isAlly ~= Friend then 
-		--print((UnitName(nameplateID) or "").." isAlly "..tostring(isAlly).." ~= Friend ".. tostring(Friend))
-		isAlly = Friend
+		if UnitReaction(nameplateID,"player") == 4 then 
+			isAlly = true
+		else
+			isAlly = Friend
+			print((UnitName(nameplateID) or "").." UnitIsFriend is "..tostring(isAlly).." ~=  UnitReaction is ".. tostring(Friend).." "..tostring(UnitReaction(nameplateID,"player")))
+		end
 	end
 
 	local unit_debuffs = ProcessAllUnitAuras(nameplateID, "HARMFUL")
