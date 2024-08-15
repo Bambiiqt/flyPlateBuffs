@@ -4,8 +4,8 @@ L = fPB.L
 DEBUFF_MAX_DISPLAY = 200
 BUFF_MAX_DISPLAY = 200
 
-local	C_NamePlate_GetNamePlateForUnit, C_NamePlate_GetNamePlates, CreateFrame, UnitName, UnitIsUnit, UnitIsPlayer, UnitPlayerControlled, UnitIsEnemy, UnitIsFriend, GetSpellInfo, table_sort, strmatch, format, wipe, pairs, GetTime, math_floor =
-		C_NamePlate.GetNamePlateForUnit, C_NamePlate.GetNamePlates, CreateFrame, UnitName, UnitIsUnit, UnitIsPlayer, UnitPlayerControlled, UnitIsEnemy, UnitIsFriend, GetSpellInfo, table.sort, strmatch, format, wipe, pairs, GetTime, math.floor
+local	C_NamePlate_GetNamePlateForUnit, C_NamePlate_GetNamePlates, CreateFrame, UnitName, UnitIsUnit, UnitIsPlayer, UnitPlayerControlled, UnitIsEnemy, UnitIsFriend, table_sort, strmatch, format, wipe, pairs, GetTime, math_floor =
+		C_NamePlate.GetNamePlateForUnit, C_NamePlate.GetNamePlates, CreateFrame, UnitName, UnitIsUnit, UnitIsPlayer, UnitPlayerControlled, UnitIsEnemy, UnitIsFriend, table.sort, strmatch, format, wipe, pairs, GetTime, math.floor
 
 local defaultSpells1, defaultSpells2 = fPB.defaultSpells1, fPB.defaultSpells2
 
@@ -620,45 +620,36 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 
 	if spellId == 363916 then --Obsidian Scales w/Mettles
 		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
-		TooltipUtil.SurfaceArgs(tooltipData)
-
-		for _, line in ipairs(tooltipData.lines) do
-			TooltipUtil.SurfaceArgs(line)
-		end
-	   --print("Unit Aura: ", tooltipData.lines[1].leftText)
-	   --print("Aura Info: ", tooltipData.lines[2].leftText)
-	    if strfind(tooltipData.lines[2].leftText, "Immune") then
-			icon = 1526594
+		if tooltipData then
+		--print("Unit Aura: ", tooltipData.lines[1].leftText)
+		--print("Aura Info: ", tooltipData.lines[2].leftText)
+			if strfind(tooltipData.lines[2].leftText, "Immune") then
+				icon = 1526594
+			end
 		end
 	end
 
 	if spellId == 358267 then --Hover/Unburdened Flight
         local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
-        TooltipUtil.SurfaceArgs(tooltipData)
-
-        for _, line in ipairs(tooltipData.lines) do
-            TooltipUtil.SurfaceArgs(line)
-        end
-       --print("Unit Aura: ", tooltipData.lines[1].leftText)
-       --print("Aura Info: ", tooltipData.lines[2].leftText)
-        if strfind(tooltipData.lines[2].leftText, "Immune") then
-            icon = 1029587
-        end
+		if tooltipData then
+		--print("Unit Aura: ", tooltipData.lines[1].leftText)
+		--print("Aura Info: ", tooltipData.lines[2].leftText)
+			if strfind(tooltipData.lines[2].leftText, "Immune") then
+				icon = 1029587
+			end
+		end
     end
 
 	if spellId == 319504 then --Finds Hemotoxin for Shiv
 		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
-		TooltipUtil.SurfaceArgs(tooltipData)
-
-		for _, line in ipairs(tooltipData.lines) do
-			TooltipUtil.SurfaceArgs(line)
-		end
-	   --print("Unit Aura: ", tooltipData.lines[1].leftText)
-	   --print("Aura Info: ", tooltipData.lines[2].leftText)
-		if strfind(tooltipData.lines[2].leftText, "35") then
-			icon = 3610996
-		else
-			
+		if tooltipData then
+		--print("Unit Aura: ", tooltipData.lines[1].leftText)
+		--print("Aura Info: ", tooltipData.lines[2].leftText)
+			if strfind(tooltipData.lines[2].leftText, "35") then
+				icon = 3610996
+			else
+				
+			end
 		end
 	end
 
@@ -667,63 +658,51 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 	-----------------------------------------------------------------------------------------------------------------
 	if spellId == 1714  then --Amplify Curse's Tongues
 		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
-		TooltipUtil.SurfaceArgs(tooltipData)
-
-		for _, line in ipairs(tooltipData.lines) do
-			TooltipUtil.SurfaceArgs(line)
-		end
-		--print("Unit Aura: ", tooltipData.lines[1].leftText)
-		--print("Aura Info: ", tooltipData.lines[2].leftText)
-		if not strfind(tooltipData.lines[2].leftText, "10") then
-			stack = 20
-		else
-			
+		if tooltipData then
+			--print("Unit Aura: ", tooltipData.lines[1].leftText)
+			--print("Aura Info: ", tooltipData.lines[2].leftText)
+			if not strfind(tooltipData.lines[2].leftText, "10") then
+				stack = 20
+			else
+				
+			end
 		end
 	end
 	if spellId == 702 then --Amplify Curse's Weakness
 		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
-		TooltipUtil.SurfaceArgs(tooltipData)
-
-		for _, line in ipairs(tooltipData.lines) do
-			TooltipUtil.SurfaceArgs(line)
-		end
-		--print("Unit Aura: ", tooltipData.lines[1].leftText)
-		--print("Aura Info: ", tooltipData.lines[2].leftText)
-		if strfind(tooltipData.lines[2].leftText, "100") then
-			stack = 100
-		else
-			
+		if tooltipData then
+			--print("Unit Aura: ", tooltipData.lines[1].leftText)
+			--print("Aura Info: ", tooltipData.lines[2].leftText)
+			if strfind(tooltipData.lines[2].leftText, "100") then
+				stack = 100
+			else
+				
+			end
 		end
 	end
 	if spellId == 334275 then --Amplify Curse's Exhaustion
 		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
-		TooltipUtil.SurfaceArgs(tooltipData)
-
-		for _, line in ipairs(tooltipData.lines) do
-			TooltipUtil.SurfaceArgs(line)
-		end
+		if tooltipData then
 		--print("Unit Aura: ", tooltipData.lines[1].leftText)
 		--print("Aura Info: ", tooltipData.lines[2].leftText)
-		if strfind(tooltipData.lines[2].leftText, "70") then
-			stack = 70
-		else
-			
+			if strfind(tooltipData.lines[2].leftText, "70") then
+				stack = 70
+			else
+				
+			end
 		end
 	end
 
 	if spellId == 454863 then --Friends AMS 50% Magic Wall
 		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
-		TooltipUtil.SurfaceArgs(tooltipData)
-
-		for _, line in ipairs(tooltipData.lines) do
-			TooltipUtil.SurfaceArgs(line)
-		end
-		--print("Unit Aura: ", tooltipData.lines[1].leftText)
-		--print("Aura Info: ", tooltipData.lines[2].leftText)
-		if strfind(tooltipData.lines[2].leftText, "50") then
-			stack = 50
-		else
-			
+		if tooltipData then
+			--print("Unit Aura: ", tooltipData.lines[1].leftText)
+			--print("Aura Info: ", tooltipData.lines[2].leftText)
+			if strfind(tooltipData.lines[2].leftText, "50") then
+				stack = 50
+			else
+				
+			end
 		end
 	end
 
@@ -1685,22 +1664,19 @@ end
 
 local function ObjectDNE(guid) --Used for Infrnals and Ele
 	local tooltipData =  C_TooltipInfo.GetHyperlink('unit:' .. guid or '')
-	TooltipUtil.SurfaceArgs(tooltipData)
+	if tooltipData then
 
-	for _, line in ipairs(tooltipData.lines) do
-		TooltipUtil.SurfaceArgs(line)
-	end
+		if #tooltipData.lines == 1 then -- Fel Obelisk
+			return "Despawned"
+		end
 
-	if #tooltipData.lines == 1 then -- Fel Obelisk
-		return "Despawned"
-	end
-
-	for i = 1, #tooltipData.lines do 
- 		local text = tooltipData.lines[i].leftText
-		 if text and (type(text == "string")) then
-			--print(i.." "..text)
-			if strfind(text, "Level ??") or strfind(text, "Corpse") then 
-				return "Despawned"
+		for i = 1, #tooltipData.lines do 
+			local text = tooltipData.lines[i].leftText
+			if text and (type(text == "string")) then
+				--print(i.." "..text)
+				if strfind(text, "Level ??") or strfind(text, "Corpse") then 
+					return "Despawned"
+				end
 			end
 		end
 	end
@@ -1951,7 +1927,7 @@ function fPB:CLEU()
 				Ctimer(duration, function()
 					if Interrupted[sourceGUID] then
 						for k, v in pairs(Interrupted[sourceGUID]) do
-							if v.spellId == spellId then
+							if v.spellId == spellId and v.expiration == expiration then
 								--print(v.sourceName.." Timed Out "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Timer")
 								Interrupted[sourceGUID][k] = nil
 								UpdateAllNameplates()
@@ -2018,7 +1994,7 @@ function fPB:CLEU()
 				Ctimer(duration, function()
 					if Interrupted[sourceGUID] then
 						for k, v in pairs(Interrupted[sourceGUID]) do
-							if v.spellId == spellId then
+							if v.spellId == spellId and v.expiration == expiration then
 								--print(v.sourceName.." Timed Out "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Timer")
 								Interrupted[sourceGUID][k] = nil
 								UpdateAllNameplates()
@@ -2074,15 +2050,15 @@ function fPB:CLEU()
 						Interrupted[destGUID] = {}
 					end
 					if(listedSpell.show == 1)
-						or(listedSpell.show == 2 and my)
-						or(listedSpell.show == 4 and isAlly)
-						or(listedSpell.show == 5 and not isAlly) then
+					or(listedSpell.show == 2 and my)
+					or(listedSpell.show == 4 and isAlly)
+					or(listedSpell.show == 5 and not isAlly) then
 						local tablespot = #Interrupted[destGUID] + 1
 						local sourceGUID_Kick = true
 						for k, v in pairs(Interrupted[destGUID]) do
 							if v.icon == icon and v.sourceGUID == sourceGUID and ((expiration - v.expiration) < 1) then
 								--print("Regular Kick Spell Exists, kick used within: "..(expiration - v.expiration))
-								sourceGUID_Kick = nil -- the source already used his kick within a GCD on this destGUID
+								sourceGUID_Kick = false -- the source already used his kick within a GCD on this destGUID
 								break
 							end
 						end
@@ -2091,8 +2067,13 @@ function fPB:CLEU()
 							tblinsert (Interrupted[destGUID], tablespot, { type = type, icon = icon, stack = stack, debufftype = debufftype, duration = duration, expiration = expiration, scale = scale, durationSize = durationSize, stackSize = stackSize, id = id, EnemyBuff = EnemyBuff, sourceGUID = sourceGUID, glow = glow,  ["destGUID"] = destGUID, ["sourceName"] = sourceName, ["namePrint"] = namePrint, ["expiration"] = expiration, ["spellId"] = spellId})
 							Ctimer(duration, function()
 								if Interrupted[destGUID] then
-									Interrupted[destGUID][tablespot] = nil
-									UpdateAllNameplates()
+									for k, v in pairs(Interrupted[destGUID]) do
+										if v.spellId == spellId and v.expiration == expiration then
+											--print(v.sourceName.." Timed Out "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Timer")
+											Interrupted[destGUID][k] = nil
+											UpdateAllNameplates()
+										end
+									end
 								end
 							end)
 						end
@@ -2141,7 +2122,7 @@ function fPB:CLEU()
 					for k, v in pairs(Interrupted[destGUID]) do
 						if v.icon == icon and v.sourceGUID == sourceGUID and ((expiration - v.expiration) < 1) then
 							--print("Casted Kick Fired but Did Not Execute within: "..(expiration - v.expiration).." of Channel Kick Firing")
-							sourceGUID_Kick = nil -- the source already used his kick within a GCD on this destGUID
+							sourceGUID_Kick = false -- the source already used his kick within a GCD on this destGUID
 							break
 						end
 					end
@@ -2151,8 +2132,13 @@ function fPB:CLEU()
 						UpdateAllNameplates()
 						Ctimer(duration, function()
 							if Interrupted[destGUID] then
-								Interrupted[destGUID][tablespot] = nil
-								UpdateAllNameplates()
+								for k, v in pairs(Interrupted[destGUID]) do
+									if v.spellId == spellId and v.expiration == expiration then
+										--print(v.sourceName.." Timed Out "..v.namePrint.." "..substring(v.destGUID, -7).." left w/ "..string.format("%.2f", v.expiration-GetTime()).." fPB C_Timer")
+										Interrupted[destGUID][k] = nil
+										UpdateAllNameplates()
+									end
+								end
 							end
 						end)
 					end
