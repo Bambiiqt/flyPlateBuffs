@@ -6,6 +6,7 @@ local UpdateAllNameplates = fPB.UpdateAllNameplates
 
 local 	GetSpellInfo, tonumber, pairs, table_sort, table_insert =
 		GetSpellInfo, tonumber, pairs, table.sort, table.insert
+
 local	DISABLE = DISABLE
 local chatColor = fPB.chatColor
 local linkColor = fPB.linkColor
@@ -15,6 +16,16 @@ local tooltip = CreateFrame("GameTooltip", "fPBScanSpellDescTooltip", UIParent, 
 tooltip:Show()
 tooltip:SetOwner(UIParent, "ANCHOR_NONE")
 
+local GetSpellInfo = GetSpellInfo or function(spellID)
+	if not spellID then
+	  return nil;
+	end
+  
+	local spellInfo = C_Spell.GetSpellInfo(spellID);
+	if spellInfo then
+	  	return spellInfo.name, nil, spellInfo.iconID, spellInfo.castTime, spellInfo.minRange, spellInfo.maxRange, spellInfo.spellID, spellInfo.originalIconID;
+	end
+end
 
 local minIconSize = 10
 local maxIconSize = 100
@@ -122,10 +133,10 @@ end
 local function cmp_col1_col2(a, b)
 	if (a and b) then
 		local Spells = db.Spells
-		a1 = tostring(Spells[a].class or a)
-		b1 = tostring(Spells[b].class or b)
-		a2 = tostring(Spells[a].scale or a)
-		b2 = tostring(Spells[b].scale or b)
+		local a1 = tostring(Spells[a].class or a)
+		local b1 = tostring(Spells[b].class or b)
+		local a2 = tostring(Spells[a].scale or a)
+		local b2 = tostring(Spells[b].scale or b)
 	 if a1 < b1 then return true end
 	 if a1 > b1 then return false end
 		 return a2 > b2
@@ -135,12 +146,12 @@ end
 local function cmp_col1_col2_col3(a, b)
 	if (a and b ) then
 		local Spells = db.Spells
-		a1 = tostring(Spells[a].class or a)
-		b1 = tostring(Spells[b].class or b)
-		a2 = tostring(Spells[a].scale or a)
-		b2 = tostring(Spells[b].scale or b)
-		a3 = tostring(Spells[a].name or a)
-		b3 = tostring(Spells[b].name or b)
+		local a1 = tostring(Spells[a].class or a)
+		local b1 = tostring(Spells[b].class or b)
+		local a2 = tostring(Spells[a].scale or a)
+		local b2 = tostring(Spells[b].scale or b)
+		local a3 = tostring(Spells[a].name or a)
+		local b3 = tostring(Spells[b].name or b)
 	 if a1 < b1 then return true end
 	 if a1 > b1 then return false end
 	 if a2 > b2 then return true end
@@ -2813,7 +2824,7 @@ fPB.MainOptionTable = {
 					type = "toggle",
 					name = L["Enable OmniCC"],
 					desc = L["If loaded Blizzard Count is not avialable but you can customize the look in OmniCC using fPB as the pattern for the elemnet UI to anything you like with OmniCC"],
-					disabled = function() return not IsAddOnLoaded("OmniCC") end
+					disabled = function() return not C_AddOns.IsAddOnLoaded("OmniCC") end
 				},
 				blizzardCountdown = {
 					order =22,
@@ -2833,7 +2844,7 @@ fPB.MainOptionTable = {
 							SetCVar("countdownForCooldowns", 0)
 						end
 					end,
-					disabled = function() return IsAddOnLoaded("OmniCC") end
+					disabled = function() return C_AddOns.IsAddOnLoaded("OmniCC") end
 				},
 				showStdSwipe = {
 					order = 23,

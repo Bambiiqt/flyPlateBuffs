@@ -1,12 +1,16 @@
 ﻿local AddonName, fPB = ...
 L = fPB.L
 
+DEBUFF_MAX_DISPLAY = 200
+BUFF_MAX_DISPLAY = 200
+
 local	C_NamePlate_GetNamePlateForUnit, C_NamePlate_GetNamePlates, CreateFrame, UnitName, UnitIsUnit, UnitIsPlayer, UnitPlayerControlled, UnitIsEnemy, UnitIsFriend, GetSpellInfo, table_sort, strmatch, format, wipe, pairs, GetTime, math_floor =
 		C_NamePlate.GetNamePlateForUnit, C_NamePlate.GetNamePlates, CreateFrame, UnitName, UnitIsUnit, UnitIsPlayer, UnitPlayerControlled, UnitIsEnemy, UnitIsFriend, GetSpellInfo, table.sort, strmatch, format, wipe, pairs, GetTime, math.floor
 
 local defaultSpells1, defaultSpells2 = fPB.defaultSpells1, fPB.defaultSpells2
 
-local UnitAuraBySlot, UnitAuraSlots = UnitAuraBySlot, UnitAuraSlots
+local GetAuraSlots = C_UnitAuras and C_UnitAuras.GetAuraSlots
+local UnitAuraBySlot, UnitAuraSlots = C_UnitAuras.GetAuraDataBySlot, C_UnitAuras.GetAuraSlots
 local GetAuraDataBySlot, GetAuraDataByAuraInstanceID = C_UnitAuras and C_UnitAuras.GetAuraDataBySlot, C_UnitAuras and C_UnitAuras.GetAuraDataByAuraInstanceID
 
 local LSM = LibStub("LibSharedMedia-3.0")
@@ -20,6 +24,19 @@ fPB.db = {}
 local db
 
 local tooltip = CreateFrame("GameTooltip", "fPBMouseoverTooltip", UIParent, "GameTooltipTemplate")
+
+
+local GetSpellInfo = GetSpellInfo or function(spellID)
+	if not spellID then
+	  return nil;
+	end
+  
+	local spellInfo = C_Spell.GetSpellInfo(spellID);
+	if spellInfo then
+	  	return spellInfo.name, nil, spellInfo.iconID, spellInfo.castTime, spellInfo.minRange, spellInfo.maxRange, spellInfo.spellID, spellInfo.originalIconID;
+	end
+end
+
 
 local UnitAura = UnitAura
 if UnitAura == nil then
@@ -66,32 +83,58 @@ ProcessAllUnitAuras = function(unitid, effect)
     local _
     local unit_auras = {}
 
+    local aura_max_display = (effect == "HARMFUL" and DEBUFF_MAX_DISPLAY) or BUFF_MAX_DISPLAY
+    -- AuraUtil.ForEachAura(unitid, effect, BUFF_MAX_DISPLAY, function(unit_aura_info)
+    --   unit_aura_info.duration = unit_aura_info.duration or 0
+    --   unit_auras[#unit_auras + 1] = unit_aura_info
+    --   -- Addon.Logging.Debug("Aura:", aura.name, "=> ID:", aura.spellId)
+    -- end, true)
+
+    -- AuraUtil.ForEachAura:
     local continuation_token
     repeat
-      -- continuationToken is the first return value of UnitAuraSltos
-      local slots = { UnitAuraSlots(unitid, effect, BUFF_MAX_DISPLAY, continuation_token) }
+      -- continuationToken is the first return value of UnitAuraSlots
+      local slots = { GetAuraSlots(unitid, effect, aura_max_display, continuation_token) }
       continuation_token = slots[1]
 
       for i = 2, #slots do
-        local aura = {}
-
-        aura.name, aura.icon, aura.applications, aura.debuffType, aura.duration, aura.expirationTime, aura.sourceUnit,
-          aura.isStealable, aura.nameplateShowPersonal, aura.spellId, aura.canApplyAura, aura.isBossAura, _, aura.nameplateShowAll =
-          UnitAuraBySlot(unitid, slots[i])
-      
-          local unit_aura_info = GetAuraDataBySlot(unitid, slots[i])   
-          if unit_aura_info then
-            aura.auraInstanceID = unit_aura_info.auraInstanceID
-            aura.UnitAuraInfo = unit_aura_info
-          end
-          
-          unit_auras[#unit_auras + 1] = aura
-          --Addon.Logging.Debug("Aura:", aura.name, "=> ID:", aura.spellId)
+        local unit_aura_info = GetAuraDataBySlot(unitid, slots[i])  
+        -- Without this check, there will be a Lua error when a priest mindcontrolls another player as 
+        -- unit_aura_info is nil here in this case
+        if unit_aura_info then
+          unit_aura_info.duration = unit_aura_info.duration or 0
+          unit_auras[#unit_auras + 1] = unit_aura_info
+          -- if unit_aura_info.sourceUnit == "player" then
+          --   Addon.Logging.Debug("Aura:", unit_aura_info.name, "=> ID:", unit_aura_info.spellId)
+          -- end
+        end
       end
-    until continuation_token == nil
+    until continuationToken == nil
 
     return unit_auras
-  end
+end
+
+  local function UnpackAuraData(auraData)
+	if not auraData then
+		return nil;
+	end
+
+	return auraData.name,
+		auraData.icon,
+		auraData.applications,
+		auraData.dispelName,
+		auraData.duration,
+		auraData.expirationTime,
+		auraData.sourceUnit,
+		auraData.isStealable,
+		auraData.nameplateShowPersonal,
+		auraData.spellId,
+		auraData.canApplyAura,
+		auraData.isBossAura,
+		auraData.isFromPlayerOrPlayerPet,
+		auraData.nameplateShowAll,
+		auraData.timeMod
+end
 
 
 fPB.chatColor = "|cFFFFA500"
@@ -560,7 +603,7 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		local unit_auras = ProcessAllUnitAuras(nameplateID, type)
 		for i = 1, #unit_auras do
 			local aura = unit_auras[i]
-			local _, _, c, _, d, e, _, _, _, s = aura.name, aura.icon, aura.applications, aura.debuffType, aura.duration, aura.expirationTime, aura.sourceUnit, aura.isStealable, aura.nameplateShowPersonal, aura.spellId, aura.canApplyAura, aura.isBossAura, _, aura.nameplateShowAll
+			local _, _, c, _, d, e, _, _, _, s = UnpackAuraData(aura)
 			if s == 382148 then
 				stack = c
 				break
@@ -668,6 +711,22 @@ local function FilterBuffs(isAlly, frame, type, name, icon, stack, debufftype, d
 		end
 	end
 
+	if spellId == 454863 then --Friends AMS 50% Magic Wall
+		local tooltipData = C_TooltipInfo.GetUnitAura(nameplateID, id, type)
+		TooltipUtil.SurfaceArgs(tooltipData)
+
+		for _, line in ipairs(tooltipData.lines) do
+			TooltipUtil.SurfaceArgs(line)
+		end
+		--print("Unit Aura: ", tooltipData.lines[1].leftText)
+		--print("Aura Info: ", tooltipData.lines[2].leftText)
+		if strfind(tooltipData.lines[2].leftText, "50") then
+			stack = 50
+		else
+			
+		end
+	end
+
 
 
 
@@ -708,17 +767,29 @@ local function ScanUnitBuffs(nameplateID, frame)
 
 	local isAlly = UnitIsFriend(nameplateID, "player")
 
+	local Friend = UnitReaction(nameplateID,"player")
+	if Friend and (Friend == 5 or Friend == 6 or Friend == 7) then
+		Friend = true 
+	else	
+		Friend = false
+	end
+
+	if isAlly ~= Friend then 
+		print((UnitName(nameplateID) or "").." isAlly "..tostring(isAlly).." ~= Friend ".. tostring(Friend))
+		isAlly = Friend
+	end
+
 	local unit_debuffs = ProcessAllUnitAuras(nameplateID, "HARMFUL")
 	for id = 1, #unit_debuffs do
 		local aura = unit_debuffs[id]
-		local name, icon, stack, debufftype, duration, expiration, caster, _, _, spellId = aura.name, aura.icon, aura.applications, aura.debuffType, aura.duration, aura.expirationTime, aura.sourceUnit, aura.isStealable, aura.nameplateShowPersonal, aura.spellId, aura.canApplyAura, aura.isBossAura, _, aura.nameplateShowAll
+		local name, icon, stack, debufftype, duration, expiration, caster, _, _, spellId = UnpackAuraData(aura)
 		FilterBuffs(isAlly, frame, "HARMFUL", name, icon, stack, debufftype, duration, expiration, caster, spellId, id, nameplateID)
 	end
 
 	local unit_buffs = ProcessAllUnitAuras(nameplateID, "HELPFUL")
 	for id = 1, #unit_buffs do
 		local aura = unit_buffs[id]
-		local name, icon, stack, debufftype, duration, expiration, caster, _, _, spellId = aura.name, aura.icon, aura.applications, aura.debuffType, aura.duration, aura.expirationTime, aura.sourceUnit, aura.isStealable, aura.nameplateShowPersonal, aura.spellId, aura.canApplyAura, aura.isBossAura, _, aura.nameplateShowAll
+		local name, icon, stack, debufftype, duration, expiration, caster, _, _, spellId = UnpackAuraData(aura)
 		--print(id.." "..(name or "nil").." "..nameplateID.." "..tostring(isAlly))
 		FilterBuffs(isAlly, frame, "HELPFUL", name, icon, stack, debufftype, duration, expiration, caster, spellId, id, nameplateID)
 	end
@@ -737,7 +808,7 @@ local function FilterUnits(nameplateID)
 	if not UnitPlayerControlled(nameplateID) and not UnitIsPlayer(nameplateID) and not db.showOnNPC then return true end
 	if UnitIsEnemy(nameplateID,"player") and not db.showOnEnemy then return true end
 	local Friend = UnitReaction(nameplateID,"player")
-	if Friend and (Friend == 5 or Friend == 6 or Friend == 7) then
+	if Friend and (Friend == 5 or Friend == 6 or Friend == 7 or Friend == 8) then
 		Friend = true 
 	else	
 		Friend = false
@@ -906,16 +977,16 @@ local function UpdateBuffIconOptions(self, buff)
 		self.cooldown:SetDrawSwipe(false)
 	end
 
-	if db.showStdCooldown and IsAddOnLoaded("OmniCC") then
+	if db.showStdCooldown and C_AddOns.IsAddOnLoaded("OmniCC") then
 		self.cooldown:SetScript("OnUpdate", nil)
 		if self.cooldown._occ_display then self.cooldown._occ_display:Show() end
-	elseif IsAddOnLoaded("OmniCC") then
+	elseif C_AddOns.IsAddOnLoaded("OmniCC") then
 		self.cooldown:SetScript("OnUpdate", function() if self.cooldown._occ_display and self.cooldown._occ_display:IsShown() then self.cooldown._occ_display:Hide() end end) --Hides OmniCC
 	end
 
-	if db.blizzardCountdown and not IsAddOnLoaded("OmniCC") then
+	if db.blizzardCountdown and not C_AddOns.IsAddOnLoaded("OmniCC") then
 		self.cooldown:SetHideCountdownNumbers(false)
-	elseif IsAddOnLoaded("OmniCC") then
+	elseif C_AddOns.IsAddOnLoaded("OmniCC") then
 		self.cooldown:SetHideCountdownNumbers(true)
 	else
 		self.cooldown:SetHideCountdownNumbers(true) --Hides Blizzard
@@ -1142,49 +1213,6 @@ local function UpdateUnitAuras(nameplateID,updateOptions)
 
 	DrawOnPlate(frame)
 end
-
-local creatureId = {
-
-	[27829] = {25 , 132182}, --Ebon Gargoyle
-
-	[1964] = {10, 132129}, --Treant
-	[103822] = {10, 132129}, --Treant
-	[54983] = {15, 132129}, --Grove Guardians
-
-	[510] = {45, 135862}, --Water Elemental
-	[31216] = {40, 135994}, --Mirrorr Image
-
-	[19668] = {15, 136199}, --Shadowfiend
-	[62982] = {15, 136214}, --Minbender
-	[101398] = {12, 537021}, --Psyfiend
-
-	[95072] = {60, 136024}, --Greater Earth Elemntal
-	[61056] = {60, 136024}, --Primal Earth Elemntal
-	[95061] = {30, 135790}, --Greater Fire Elemntal
-	[61029] = {30, 135790}, --Primal Fire Elemntal
-	[77942] = {30, 2065626}, --Greater Storm Elemntal
-	[77936] = {30, 2065626}, --Primal Storm Elemntal
-	[29264] = {15, 237577}, --Spirit Wolf
-	[100820] = {15, 237577}, --Spirit Wolf
-	['Spirit Wolf'] = {15, 237577}, --Spirit Wolf
-
-	["Infernal"] = {30, 136219}, --Infernal
-	[135002] = {15, 2065628}, --Demonic Tyrant
-	[196111] = {10, 236423}, --Pit Lord
-	[179193] = {15, 1718002}, --Fel Obelisk
-
---Pets--
-	[26125] = {0, 237511}, --Raise Ghoul
-	[1863] = {0, 136220}, --Succubas
-	[185317] = {0, 136220}, --Inncubas
-	[417] = {0, 136217}, --Fel hunter
-	[416] = {0, 136218}, --Imp
-	[1860] = {0, 136221}, --Voidwalker
-	[58965] = {0, 136216}, --Grimoire: Felguard
-	[12752] = {0, 136216}, --Grimoire: Felguard
-	[17252] = {0, 136216}, --Grimoire: Felguard
-
-}
 
 function fPB.UpdateAllNameplates(updateOptions)
 	for i, p in ipairs(C_NamePlate_GetNamePlates()) do
@@ -1583,39 +1611,6 @@ fPB.Events:SetScript("OnEvent", function(self, event, ...)
 	end
 end)
 
-local interruptsIds = {
-	[47528]  = 3,		-- Mind Freeze (Death Knight)
-	[91802]  = 2,		-- Shambling Rush (Death Knight)
-	[91807] =  2,  		-- Shambling Rush
-	[183752] = 3,		-- Disrupt (Demon Hunter)
-	[93985]  = 3,		-- Skull Bash
-	[97547]  = 5,		-- Solar Beam (Druid Balance)
-	[351338] = 4,		-- Quell (Evoker)
-	[147362] = 3,		-- Countershot (Hunter)
-	[187707] = 3,		-- Muzzle (Hunter)
-	[2139]   = 5,		-- Counterspell (Mage)
-	[116705] = 3,		-- Spear Hand Strike (Monk)
-	[96231]  = 3,		-- Rebuke (Paladin)
-	[231665] = 3,		-- Avengers Shield (Paladin)
-	[217824] = 4,		-- Shield of Virtue (Protec Paladin)
-	[1766]   = 3,		-- Kick (Rogue)
-	[57994]  = 2,		-- Wind Shear (Shaman)
-	[19647]  = 5,		-- Spell Lock (felhunter) (Warlock)
-	[132409] = 5,		-- Spell Lock (command demon) (Warlock)
-	[115781] = 5,		-- Optical Blast (Warlock)
-	[212619] = 5,		-- Call Felhunter (Warlock)
-	[347008] = 3,		-- Axe Toss(felguard) (Warlock)(4 for PVE, 3 for PVP)
-	[6552]   = 3,		-- Pummel (Warrior)
-
-	--[11972] =  3,  		--Shield Bash (testing Purposes in Northern barrens)
-
-}
-
-local castedAuraIds = {
-	[202770] = 8, --Fury of Elune
-	[202359] = 6, --Astral Communion
-}
-
 -- Function to check if pvp talents are active for the player
 local function ArePvpTalentsActive()
     local inInstance, instanceType = IsInInstance()
@@ -1651,8 +1646,8 @@ local function interruptDuration(destGUID, duration)
 	local unit_auras = ProcessAllUnitAuras(unit, "HELPFUL")
 	for i = 1, #unit_auras do
 		local aura = unit_auras[i]
-		local _, _, _, _, _, _, _, _, _, auxSpellId = aura.name, aura.icon, aura.applications, aura.debuffType, aura.duration, aura.expirationTime, aura.sourceUnit, aura.isStealable, aura.nameplateShowPersonal, aura.spellId, aura.canApplyAura, aura.isBossAura, _, aura.nameplateShowAll
-			if (destClass == "DRUID") then
+		local _, _, _, _, _, _, _, _, _, auxSpellId = UnpackAuraData(aura)
+		if (destClass == "DRUID") then
 				if auxSpellId == 234084 then	-- Moon and Stars (Druid) [Interrupted Mechanic Duration -70% (stacks)]
 					duration = duration * 0.5
 				end
@@ -1666,7 +1661,7 @@ local function interruptDuration(destGUID, duration)
 		local unit_auras = ProcessAllUnitAuras(unit, "HARMFUL")
 		for i = 1, #unit_auras do
 			local aura = unit_auras[i]
-			local _, _, _, _, _, _, _, _, _, auxSpellId = aura.name, aura.icon, aura.applications, aura.debuffType, aura.duration, aura.expirationTime, aura.sourceUnit, aura.isStealable, aura.nameplateShowPersonal, aura.spellId, aura.canApplyAura, aura.isBossAura, _, aura.nameplateShowAll
+			local _, _, _, _, _, _, _, _, _, auxSpellId = UnpackAuraData(aura)
 			if auxSpellId == 372048 then	-- Oppressing Roar (Evoker) [Interrupted Mechanic Duration +30%/+50% (PvP/PvE) (stacks)]
 				if ArePvpTalentsActive() then
 					duration = duration * 1.3
